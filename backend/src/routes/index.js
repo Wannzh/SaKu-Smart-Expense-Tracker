@@ -3,15 +3,15 @@ const { Router } = require("express");
 const router = Router();
 
 const authRoutes = require("./auth.route");
+const categoryRoutes = require("./category.route");
 // TODO: Uncomment setelah masing-masing route file dibuat
 // const transactionRoutes = require("./transaction.routes");
-// const categoryRoutes = require("./category.routes");
 // const receiptRoutes = require("./receipt.routes");
 // const chatRoutes = require("./chat.routes");
 
 router.use("/auth", authRoutes);
 // router.use("/transactions", transactionRoutes);
-// router.use("/categories", categoryRoutes);
+router.use("/categories", categoryRoutes);
 // router.use("/receipts", receiptRoutes);
 // router.use("/chat", chatRoutes);
 
