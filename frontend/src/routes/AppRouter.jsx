@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
+import AppLayout from "../components/layout/AppLayout";
 import { Loader2 } from "lucide-react";
 
 // ─── Lazy-loaded Pages ────────────────────────────────────────
@@ -16,9 +17,20 @@ const ChatPage = lazy(() => import("../pages/ChatPage"));
  */
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen bg-[#F9FAFB]">
       <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
     </div>
+  );
+}
+
+/**
+ * Helper — bungkus page dalam ProtectedRoute + AppLayout
+ */
+function ProtectedPage({ children }) {
+  return (
+    <ProtectedRoute>
+      <AppLayout>{children}</AppLayout>
+    </ProtectedRoute>
   );
 }
 
@@ -27,41 +39,41 @@ export default function AppRouter() {
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* Public routes */}
+          {/* Public routes (tanpa sidebar) */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected routes */}
+          {/* Protected routes (dengan sidebar) */}
           <Route
             path="/"
             element={
-              <ProtectedRoute>
+              <ProtectedPage>
                 <DashboardPage />
-              </ProtectedRoute>
+              </ProtectedPage>
             }
           />
           <Route
             path="/transactions"
             element={
-              <ProtectedRoute>
+              <ProtectedPage>
                 <TransactionsPage />
-              </ProtectedRoute>
+              </ProtectedPage>
             }
           />
           <Route
             path="/scan"
             element={
-              <ProtectedRoute>
+              <ProtectedPage>
                 <ScanPage />
-              </ProtectedRoute>
+              </ProtectedPage>
             }
           />
           <Route
             path="/chat"
             element={
-              <ProtectedRoute>
+              <ProtectedPage>
                 <ChatPage />
-              </ProtectedRoute>
+              </ProtectedPage>
             }
           />
 
