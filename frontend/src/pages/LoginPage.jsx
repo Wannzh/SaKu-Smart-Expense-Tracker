@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import Button from "../components/common/Button";
@@ -11,16 +11,43 @@ const LoginPage = memo(function LoginPage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    // Clear error on change
+    if (errors[e.target.name]) {
+      setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    }
   };
+
+  const validate = useMemo(() => {
+    return () => {
+      const errs = {};
+      if (!form.email) {
+        errs.email = "Email wajib diisi";
+      } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+        errs.email = "Format email tidak valid";
+      }
+      if (!form.password) {
+        errs.password = "Password wajib diisi";
+      } else if (form.password.length < 6) {
+        errs.password = "Password minimal 6 karakter";
+      }
+      return errs;
+    };
+  }, [form.email, form.password]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      return;
+    }
 
+    setIsLoading(true);
     try {
       await login(form.email, form.password);
       navigate("/");
@@ -32,22 +59,21 @@ const LoginPage = memo(function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] px-4">
-      {/* Card */}
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-amber-50/30 px-4">
+      <div className="w-full max-w-md animate-fade-slide-up">
         {/* Logo & Tagline */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-600 mb-4 shadow-lg shadow-indigo-200">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 mb-4 shadow-lg shadow-indigo-200/60">
             <Wallet className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-indigo-600 tracking-tight">
             SaKu
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Smart Expense Tracker</p>
+          <p className="text-gray-400 text-sm mt-1">Smart Expense Tracker</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100/80 p-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">
             Masuk ke akun kamu
           </h2>
@@ -60,6 +86,7 @@ const LoginPage = memo(function LoginPage() {
               value={form.email}
               onChange={handleChange}
               placeholder="nama@email.com"
+              error={errors.email}
               required
             />
 
@@ -70,6 +97,7 @@ const LoginPage = memo(function LoginPage() {
               value={form.password}
               onChange={handleChange}
               placeholder="Masukkan password"
+              error={errors.password}
               required
             />
 

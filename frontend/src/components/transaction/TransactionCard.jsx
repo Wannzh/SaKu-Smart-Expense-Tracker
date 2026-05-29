@@ -12,12 +12,19 @@ const TransactionCard = memo(function TransactionCard({
   const isIncome = transaction.type === "INCOME";
 
   return (
-    <div className="flex items-center gap-4 rounded-xl bg-white p-4 border border-gray-100 hover:shadow-sm transition-shadow duration-200 group">
+    <div
+      className={clsx(
+        "flex items-center gap-4 rounded-xl bg-white p-4 border border-gray-100 group",
+        "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+      )}
+    >
       {/* Category icon */}
       <div
         className={clsx(
           "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg",
-          isIncome ? "bg-emerald-50" : "bg-red-50"
+          isIncome
+            ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50"
+            : "bg-gradient-to-br from-red-50 to-red-100/50"
         )}
       >
         {transaction.category?.icon || (isIncome ? "💰" : "💸")}
@@ -37,7 +44,7 @@ const TransactionCard = memo(function TransactionCard({
       <div className="text-right shrink-0">
         <p
           className={clsx(
-            "text-sm font-bold",
+            "text-sm font-bold tabular-nums",
             isIncome ? "text-emerald-600" : "text-red-500"
           )}
         >
@@ -48,7 +55,7 @@ const TransactionCard = memo(function TransactionCard({
         </p>
       </div>
 
-      {/* Actions — visible on hover */}
+      {/* Actions */}
       {showActions && (
         <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
