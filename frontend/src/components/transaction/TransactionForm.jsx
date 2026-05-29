@@ -5,16 +5,17 @@ import Input from "../common/Input";
 import clsx from "clsx";
 import { toISODate } from "../../utils/format";
 
-const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel }) {
+const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, initialData }) {
   const { categories, getCategories } = useCategory();
   const [isLoading, setIsLoading] = useState(false);
+  const isEdit = Boolean(initialData);
 
   const [form, setForm] = useState({
-    amount: "",
-    type: "EXPENSE",
-    description: "",
-    date: toISODate(new Date()),
-    categoryId: "",
+    amount: initialData?.amount?.toString() || "",
+    type: initialData?.type || "EXPENSE",
+    description: initialData?.description || "",
+    date: initialData?.date ? toISODate(initialData.date) : toISODate(new Date()),
+    categoryId: initialData?.categoryId || "",
   });
 
   useEffect(() => {
@@ -130,7 +131,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel }) {
           Batal
         </Button>
         <Button type="submit" isLoading={isLoading} className="flex-1">
-          {isLoading ? "Menyimpan..." : "Simpan"}
+          {isLoading ? "Menyimpan..." : isEdit ? "Simpan" : "Tambah"}
         </Button>
       </div>
     </form>
