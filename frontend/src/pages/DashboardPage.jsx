@@ -108,7 +108,8 @@ const DashboardPage = memo(function DashboardPage() {
   }
 
   return (
-    <div className="max-w-4xl animate-fade-slide-up">
+    <>
+    <div className="animate-fade-slide-up pb-24">
       {/* Greeting */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">
@@ -204,40 +205,41 @@ const DashboardPage = memo(function DashboardPage() {
           </div>
         )}
       </div>
-
-      {/* FAB */}
-      <div className="fixed bottom-8 right-8 z-30 group">
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className={clsx(
-            "flex h-14 w-14 items-center justify-center rounded-full",
-            "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white",
-            "shadow-lg shadow-indigo-300/50",
-            "hover:shadow-xl hover:shadow-indigo-300/60 hover:scale-105 active:scale-95",
-            "transition-all duration-200 cursor-pointer"
-          )}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
-        {/* Tooltip */}
-        <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-          Tambah Transaksi
-          <div className="absolute top-full right-5 border-4 border-transparent border-t-gray-800" />
-        </div>
-      </div>
-
-      {/* Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Tambah Transaksi"
-      >
-        <TransactionForm
-          onSubmit={handleCreateTransaction}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      </Modal>
     </div>
+
+    {/* FAB — outside animated container to avoid transform trapping fixed position */}
+    <div className="fixed bottom-8 right-8 z-40 group">
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className={clsx(
+          "flex h-14 w-14 items-center justify-center rounded-full",
+          "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white",
+          "shadow-lg shadow-indigo-300/50",
+          "hover:shadow-xl hover:shadow-indigo-300/60 hover:scale-105 active:scale-95",
+          "transition-all duration-200 cursor-pointer"
+        )}
+      >
+        <Plus className="h-6 w-6" />
+      </button>
+      {/* Tooltip */}
+      <div className="absolute bottom-full right-0 mb-2 px-3 py-1.5 rounded-lg bg-gray-800 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        Tambah Transaksi
+        <div className="absolute top-full right-5 border-4 border-transparent border-t-gray-800" />
+      </div>
+    </div>
+
+    {/* Modal */}
+    <Modal
+      isOpen={isModalOpen}
+      onClose={() => setIsModalOpen(false)}
+      title="Tambah Transaksi"
+    >
+      <TransactionForm
+        onSubmit={handleCreateTransaction}
+        onCancel={() => setIsModalOpen(false)}
+      />
+    </Modal>
+    </>
   );
 });
 

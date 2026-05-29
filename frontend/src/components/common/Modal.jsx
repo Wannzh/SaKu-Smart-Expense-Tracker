@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import clsx from "clsx";
 
@@ -35,11 +36,11 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children }) {
     if (e.target === overlayRef.current) onClose();
   };
 
-  return (
+  return createPortal(
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
     >
       <div
         className={clsx(
@@ -61,7 +62,8 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children }) {
         {/* Content */}
         <div className="px-6 py-5">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 });
 

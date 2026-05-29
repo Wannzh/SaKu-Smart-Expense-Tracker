@@ -97,7 +97,7 @@ const TransactionsPage = memo(function TransactionsPage() {
   };
 
   return (
-    <div className="max-w-4xl animate-fade-slide-up">
+    <div className="animate-fade-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Transaksi</h1>
