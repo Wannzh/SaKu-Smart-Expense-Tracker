@@ -21,8 +21,9 @@ export function useTransaction() {
     setIsLoading(true);
     try {
       const res = await fetchTransactions(filters);
-      setTransactions(res.data.data.transactions);
-      return res.data.data.transactions;
+      const list = res.data?.data?.transactions ?? [];
+      setTransactions(list);
+      return list;
     } catch (err) {
       toast.error(err.response?.data?.message || "Gagal mengambil transaksi");
       return [];
@@ -34,29 +35,38 @@ export function useTransaction() {
   const getSummary = useCallback(async () => {
     try {
       const res = await getTransactionSummary();
-      setSummary(res.data.data.summary);
-      return res.data.data.summary;
+      // Akses defensif — handle berbagai kemungkinan response shape
+      const raw = res.data?.data?.summary ?? res.data?.data ?? res.data;
+      const parsed = {
+        totalIncome: Number(raw?.totalIncome ?? 0),
+        totalExpense: Number(raw?.totalExpense ?? 0),
+        balance: Number(raw?.balance ?? 0),
+      };
+      setSummary(parsed);
+      return parsed;
     } catch (err) {
+      console.error("[useTransaction] getSummary error:", err);
       toast.error(err.response?.data?.message || "Gagal mengambil summary");
+      return null;
     }
   }, []);
 
   const createTransaction = useCallback(async (data) => {
     const res = await postTransaction(data);
     toast.success(res.data.message);
-    return res.data.data.transaction;
+    return res.data?.data?.transaction;
   }, []);
 
   const updateTransaction = useCallback(async (id, data) => {
     const res = await putTransaction(id, data);
     toast.success(res.data.message);
-    return res.data.data.transaction;
+    return res.data?.data?.transaction;
   }, []);
 
   const deleteTransaction = useCallback(async (id) => {
     const res = await removeTransaction(id);
     toast.success(res.data.message);
-    return res.data.data.transaction;
+    return res.data?.data?.transaction;
   }, []);
 
   return {

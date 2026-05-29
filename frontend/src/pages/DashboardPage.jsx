@@ -162,7 +162,7 @@ const DashboardPage = memo(function DashboardPage() {
                 </span>
               </div>
               <p className={clsx("text-xl font-bold tabular-nums", finalColor)}>
-                {formatCurrency(summary[field] || 0)}
+                {formatCurrency(summary[field] ?? 0)}
               </p>
             </div>
           );
