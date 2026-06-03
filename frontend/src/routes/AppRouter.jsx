@@ -11,6 +11,7 @@ const DashboardPage = lazy(() => import("../pages/DashboardPage"));
 const TransactionsPage = lazy(() => import("../pages/TransactionsPage"));
 const ScanPage = lazy(() => import("../pages/ScanPage"));
 const ChatPage = lazy(() => import("../pages/ChatPage"));
+const WalletPage = lazy(() => import("../pages/WalletPage"));
 
 /**
  * Fallback loading untuk Suspense
@@ -49,6 +50,14 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <DashboardPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/wallets"
+            element={
+              <ProtectedPage>
+                <WalletPage />
               </ProtectedPage>
             }
           />

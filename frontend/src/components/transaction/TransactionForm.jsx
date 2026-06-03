@@ -1,5 +1,6 @@
 import { memo, useState, useEffect } from "react";
 import { useCategory } from "../../hooks/useCategory";
+import { useWallet } from "../../hooks/useWallet";
 import Button from "../common/Button";
 import Input from "../common/Input";
 import clsx from "clsx";
@@ -7,6 +8,7 @@ import { toISODate } from "../../utils/format";
 
 const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, initialData }) {
   const { categories, getCategories } = useCategory();
+  const { wallets, getWallets } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const isEdit = Boolean(initialData);
 
@@ -16,11 +18,13 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
     description: initialData?.description || "",
     date: initialData?.date ? toISODate(initialData.date) : toISODate(new Date()),
     categoryId: initialData?.categoryId || "",
+    walletId: initialData?.walletId || "",
   });
 
   useEffect(() => {
     getCategories();
-  }, [getCategories]);
+    getWallets();
+  }, [getCategories, getWallets]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -35,6 +39,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
         ...form,
         amount: parseFloat(form.amount),
         categoryId: form.categoryId || undefined,
+        walletId: form.walletId || undefined,
       });
     } finally {
       setIsLoading(false);
@@ -81,6 +86,24 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
         placeholder="50000"
         required
       />
+
+      {/* Wallet dropdown */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-gray-700">Wallet</label>
+        <select
+          name="walletId"
+          value={form.walletId}
+          onChange={handleChange}
+          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+        >
+          <option value="">Tanpa wallet</option>
+          {wallets.map((w) => (
+            <option key={w.id} value={w.id}>
+              {w.icon} {w.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Category dropdown */}
       <div className="flex flex-col gap-1.5">

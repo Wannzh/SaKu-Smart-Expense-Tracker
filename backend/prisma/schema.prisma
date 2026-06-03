@@ -36,6 +36,7 @@ model User {
   categories   Category[]
   transactions Transaction[]
   chatSessions ChatSession[]
+  wallets      Wallet[]
 }
 
 model Category {
@@ -53,6 +54,26 @@ model Category {
   transactions Transaction[]
 }
 
+model Wallet {
+  id             String   @id @default(cuid())
+  name           String
+  type           String   // "cash" | "bank" | "ewallet"
+  balance        Decimal  @default(0) @db.Decimal(14, 2)
+  initialBalance Decimal  @default(0) @db.Decimal(14, 2)
+  icon           String?  // emoji, e.g. "💵", "🏦", "💳"
+  color          String?  // hex color
+  bankName       String?  // e.g. "BCA", "Mandiri", "BRI"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  transactions Transaction[]
+
+  @@map("wallets")
+}
+
 model Transaction {
   id          String          @id @default(cuid())
   amount      Decimal         @db.Decimal(14, 2)
@@ -67,6 +88,9 @@ model Transaction {
 
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  walletId String?
+  wallet   Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
 
   receipt Receipt?
 }

@@ -8,11 +8,13 @@ import {
   MessageSquare,
   LogOut,
   Wallet,
+  CreditCard,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/wallets", icon: CreditCard, label: "Wallet" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Transaksi" },
   { to: "/scan", icon: ScanLine, label: "Scan Struk" },
   { to: "/chat", icon: MessageSquare, label: "Chat AI" },

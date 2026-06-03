@@ -5,11 +5,12 @@ const { sendSuccess } = require("../utils/response");
  * GET /api/transactions
  */
 const getTransactions = async (req, res, next) => {
-  const { type, categoryId, dateFrom, dateTo } = req.query;
+  const { type, categoryId, walletId, dateFrom, dateTo } = req.query;
 
   const transactions = await transactionService.getTransactions(req.user.id, {
     type,
     categoryId,
+    walletId,
     dateFrom,
     dateTo,
   });
@@ -29,7 +30,7 @@ const getSummary = async (req, res, next) => {
  * POST /api/transactions
  */
 const createTransaction = async (req, res, next) => {
-  const { amount, type, description, date, categoryId } = req.body;
+  const { amount, type, description, date, categoryId, walletId } = req.body;
 
   const transaction = await transactionService.createTransaction(req.user.id, {
     amount,
@@ -37,6 +38,7 @@ const createTransaction = async (req, res, next) => {
     description,
     date,
     categoryId,
+    walletId,
   });
 
   sendSuccess(res, 201, "Transaksi berhasil dibuat", { transaction });
@@ -54,7 +56,7 @@ const getTransactionById = async (req, res, next) => {
  * PUT /api/transactions/:id
  */
 const updateTransaction = async (req, res, next) => {
-  const { amount, type, description, date, categoryId } = req.body;
+  const { amount, type, description, date, categoryId, walletId } = req.body;
 
   const transaction = await transactionService.updateTransaction(req.user.id, req.params.id, {
     amount,
@@ -62,6 +64,7 @@ const updateTransaction = async (req, res, next) => {
     description,
     date,
     categoryId,
+    walletId,
   });
 
   sendSuccess(res, 200, "Transaksi berhasil diperbarui", { transaction });
