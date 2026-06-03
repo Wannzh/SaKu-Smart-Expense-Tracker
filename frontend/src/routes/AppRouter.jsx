@@ -7,6 +7,8 @@ import { Loader2 } from "lucide-react";
 // ─── Lazy-loaded Pages ────────────────────────────────────────
 const LoginPage = lazy(() => import("../pages/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
+const IntroPage = lazy(() => import("../pages/IntroPage"));
+const OnboardingPage = lazy(() => import("../pages/OnboardingPage"));
 const DashboardPage = lazy(() => import("../pages/DashboardPage"));
 const TransactionsPage = lazy(() => import("../pages/TransactionsPage"));
 const ScanPage = lazy(() => import("../pages/ScanPage"));
@@ -35,18 +37,51 @@ function ProtectedPage({ children }) {
   );
 }
 
+/**
+ * Root redirect logic:
+ * - Belum lihat intro → /intro
+ * - Sudah intro, belum onboarding → /onboarding
+ * - Sudah semua → Dashboard
+ */
+function RootRedirect() {
+  const introSeen = localStorage.getItem("saku_intro_seen") === "true";
+  const onboardingDone = localStorage.getItem("saku_onboarding_done") === "true";
+
+  if (!introSeen) return <Navigate to="/intro" replace />;
+  if (!onboardingDone) return <Navigate to="/onboarding" replace />;
+  return (
+    <ProtectedPage>
+      <DashboardPage />
+    </ProtectedPage>
+  );
+}
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
-          {/* Public routes (tanpa sidebar) */}
+          {/* Public routes */}
+          <Route path="/intro" element={<IntroPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
 
+          {/* Onboarding — protected but no AppLayout */}
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Root — redirect logic */}
+          <Route path="/" element={<RootRedirect />} />
+
           {/* Protected routes (dengan sidebar) */}
           <Route
-            path="/"
+            path="/dashboard"
             element={
               <ProtectedPage>
                 <DashboardPage />

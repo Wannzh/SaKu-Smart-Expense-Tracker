@@ -17,7 +17,9 @@ api.interceptors.response.use(
       // Hindari redirect loop jika sudah di halaman auth
       const isAuthPage =
         window.location.pathname === "/login" ||
-        window.location.pathname === "/register";
+        window.location.pathname === "/register" ||
+        window.location.pathname === "/intro" ||
+        window.location.pathname.startsWith("/onboarding");
 
       if (!isAuthPage) {
         window.location.href = "/login";
@@ -25,7 +27,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
