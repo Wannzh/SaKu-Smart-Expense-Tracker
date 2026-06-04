@@ -218,14 +218,14 @@ const WalletPage = memo(function WalletPage() {
       </div>
 
       {/* Total Balance Card */}
-      <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 mb-6 text-white shadow-lg shadow-indigo-200/50">
+      <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-4 lg:p-6 mb-6 text-white shadow-lg shadow-indigo-200/50">
         <div className="flex items-center gap-3 mb-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
             <Wallet className="h-5 w-5" />
           </div>
           <span className="text-xs font-semibold uppercase tracking-wider text-indigo-200">Total Saldo</span>
         </div>
-        <p className="text-3xl font-bold tabular-nums">{formatCurrency(totalBalance)}</p>
+        <p className="text-2xl lg:text-3xl font-bold tabular-nums">{formatCurrency(totalBalance)}</p>
         <p className="text-xs text-indigo-200 mt-1">{wallets.length} wallet aktif</p>
       </div>
 

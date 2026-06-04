@@ -16,7 +16,7 @@ import { formatRelativeDate } from "../utils/format";
 // ─── Session Sidebar ────────────────────────────────────────
 const SessionList = memo(function SessionList({ sessions, activeId, onSelect, onCreate, onDelete, isLoading }) {
   return (
-    <div className="flex h-full w-72 shrink-0 flex-col border-r border-[var(--border-color)] bg-[var(--sidebar-bg)]">
+    <div className="hidden lg:flex h-full w-72 shrink-0 flex-col border-r border-[var(--border-color)] bg-[var(--sidebar-bg)]">
       <div className="flex items-center justify-between px-4 py-4 border-b border-[var(--border-color)]">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Riwayat Chat</h2>
         <button onClick={onCreate} className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors cursor-pointer" title="Chat Baru">
@@ -94,7 +94,7 @@ const ChatInput = memo(function ChatInput({ onSend, isSending }) {
   }, []);
 
   return (
-    <div className="border-t border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-3">
+    <div className="border-t border-[var(--border-color)] bg-[var(--card-bg)] px-4 py-3 shrink-0">
       <div className="flex items-end gap-2 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-tertiary)] px-3 py-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100 transition-all">
         <textarea ref={textareaRef} value={text} onChange={handleInput} onKeyDown={handleKeyDown}
           placeholder="Tanya seputar keuangan..."
@@ -151,7 +151,7 @@ const ChatPage = memo(function ChatPage() {
   const handleDeleteSession = useCallback(async (id) => { await deleteSession(id); }, [deleteSession]);
 
   return (
-    <div className="flex h-screen -m-6 overflow-hidden">
+    <div className="flex h-[calc(100vh-5rem)] lg:h-screen -m-4 lg:-m-6 overflow-hidden">
       <SessionList sessions={sessions} activeId={activeSession?.id} onSelect={handleSelectSession} onCreate={handleCreateSession} onDelete={handleDeleteSession} isLoading={isLoading} />
 
       <div className="flex flex-1 flex-col bg-[var(--bg-primary)]">

@@ -166,8 +166,8 @@ const DashboardPage = memo(function DashboardPage() {
       </div>
     </div>
 
-    {/* FAB — outside animated container to avoid transform trapping fixed position */}
-    <div className="fixed bottom-8 right-8 z-40 group">
+    {/* FAB — desktop only (mobile uses BottomNav center button) */}
+    <div className="hidden lg:block fixed bottom-8 right-8 z-40 group">
       <button
         onClick={() => setIsModalOpen(true)}
         className={clsx(

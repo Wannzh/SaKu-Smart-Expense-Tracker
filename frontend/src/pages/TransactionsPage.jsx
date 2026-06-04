@@ -109,7 +109,7 @@ const TransactionsPage = memo(function TransactionsPage() {
 
       {/* Filter Bar */}
       <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 mb-6 shadow-sm">
-        <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-wrap items-end gap-3 lg:gap-4">
           {/* Type toggle — pill style */}
           <div className="flex gap-1 rounded-full bg-[var(--bg-tertiary)] p-1">
             {typeFilters.map(({ value, label }) => (
@@ -146,7 +146,7 @@ const TransactionsPage = memo(function TransactionsPage() {
           </div>
 
           {/* Date from */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 flex-1 min-w-[8rem] sm:flex-none">
             <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Dari</label>
             <input
               type="date"
@@ -157,7 +157,7 @@ const TransactionsPage = memo(function TransactionsPage() {
           </div>
 
           {/* Date to */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 flex-1 min-w-[8rem] sm:flex-none">
             <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Sampai</label>
             <input
               type="date"
