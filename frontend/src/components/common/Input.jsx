@@ -21,7 +21,7 @@ const Input = memo(function Input({
       {label && (
         <label
           htmlFor={name}
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-[var(--text-primary)]"
         >
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
@@ -38,13 +38,15 @@ const Input = memo(function Input({
           placeholder={placeholder}
           required={required}
           className={clsx(
-            "w-full rounded-xl border px-4 py-3 text-sm text-gray-900 placeholder-gray-400",
+            "w-full rounded-xl border px-4 py-3 text-sm",
+            "text-[var(--text-primary)] placeholder-[var(--text-tertiary)]",
+            "bg-[var(--bg-secondary)]",
             "outline-none transition-all duration-200",
             "focus:ring-2 focus:ring-offset-0",
             isPassword && "pr-11",
             error
               ? "border-red-400 focus:border-red-500 focus:ring-red-200"
-              : "border-gray-300 focus:border-indigo-500 focus:ring-indigo-200"
+              : "border-[var(--border-color)] focus:border-indigo-500 focus:ring-indigo-200"
           )}
         />
 
@@ -52,7 +54,7 @@ const Input = memo(function Input({
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer"
             tabIndex={-1}
           >
             {showPassword ? (

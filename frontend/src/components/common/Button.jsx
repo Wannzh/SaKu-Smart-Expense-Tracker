@@ -6,7 +6,7 @@ const variantStyles = {
   primary:
     "bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 focus-visible:ring-indigo-500",
   secondary:
-    "border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 active:bg-indigo-100 focus-visible:ring-indigo-500",
+    "border-2 border-[var(--border-color)] text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] active:bg-[var(--bg-tertiary)] focus-visible:ring-indigo-500",
   danger:
     "bg-red-500 text-white hover:bg-red-600 active:bg-red-700 focus-visible:ring-red-400",
 };

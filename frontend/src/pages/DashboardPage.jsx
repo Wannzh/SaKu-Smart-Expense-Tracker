@@ -2,7 +2,9 @@ import { memo, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useTransaction } from "../hooks/useTransaction";
+import { useTheme } from "../hooks/useTheme";
 import { formatCurrency, formatDate } from "../utils/format";
+import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import TransactionCard from "../components/transaction/TransactionCard";
 import TransactionForm from "../components/transaction/TransactionForm";
 import Modal from "../components/common/Modal";
@@ -25,42 +27,10 @@ const quotes = [
   "🚀 Kebiasaan kecil hari ini, kekayaan besar di masa depan",
 ];
 
-const summaryCards = [
-  {
-    key: "income",
-    label: "Total Pemasukan",
-    icon: TrendingUp,
-    field: "totalIncome",
-    color: "text-emerald-700",
-    gradient: "from-emerald-50 to-emerald-100/30",
-    iconBg: "bg-emerald-200/60 text-emerald-700",
-    border: "border-emerald-100",
-  },
-  {
-    key: "expense",
-    label: "Total Pengeluaran",
-    icon: TrendingDown,
-    field: "totalExpense",
-    color: "text-red-600",
-    gradient: "from-red-50 to-red-100/30",
-    iconBg: "bg-red-200/60 text-red-600",
-    border: "border-red-100",
-  },
-  {
-    key: "balance",
-    label: "Saldo",
-    icon: Wallet,
-    field: "balance",
-    color: null, // dynamic
-    gradient: null, // dynamic
-    iconBg: null, // dynamic
-    border: null, // dynamic
-  },
-];
-
 const DashboardPage = memo(function DashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { resolvedTheme, cardStyle } = useTheme();
   const {
     transactions,
     summary,
@@ -89,7 +59,13 @@ const DashboardPage = memo(function DashboardPage() {
     []
   );
 
-  // Dynamic balance card style
+  // Gradient for hero card
+  const activeGradient = useMemo(() => {
+    const gradients = resolvedTheme === "dark" ? DARK_CARD_GRADIENTS : LIGHT_CARD_GRADIENTS;
+    const safeIndex = Math.min(cardStyle, gradients.length - 1);
+    return gradients[safeIndex];
+  }, [resolvedTheme, cardStyle]);
+
   const balanceIsNegative = (summary.balance || 0) < 0;
 
   const handleCreateTransaction = async (data) => {
@@ -112,68 +88,51 @@ const DashboardPage = memo(function DashboardPage() {
     <div className="animate-fade-slide-up pb-24">
       {/* Greeting */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
           Halo, {user?.name?.split(" ")[0]} 👋
         </h1>
-        <p className="text-sm text-gray-400 mt-1">{todayDate}</p>
-        <p className="text-xs text-gray-400/80 mt-2 italic">
+        <p className="text-sm text-[var(--text-tertiary)] mt-1">{todayDate}</p>
+        <p className="text-xs text-[var(--text-tertiary)] mt-2 italic">
           {dailyQuote}
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {summaryCards.map(({ key, label, icon: Icon, field, color, gradient, iconBg, border }) => {
-          // Dynamic styles for balance card
-          const isBalance = key === "balance";
-          const finalColor = isBalance
-            ? balanceIsNegative ? "text-red-600" : "text-indigo-700"
-            : color;
-          const finalGradient = isBalance
-            ? balanceIsNegative ? "from-red-50 to-red-100/30" : "from-indigo-50 to-indigo-100/30"
-            : gradient;
-          const finalIconBg = isBalance
-            ? balanceIsNegative ? "bg-red-200/60 text-red-600" : "bg-indigo-200/60 text-indigo-700"
-            : iconBg;
-          const finalBorder = isBalance
-            ? balanceIsNegative ? "border-red-100" : "border-indigo-100"
-            : border;
-
-          return (
-            <div
-              key={key}
-              className={clsx(
-                "rounded-2xl p-5 border bg-gradient-to-br",
-                "hover:shadow-lg transition-all duration-300",
-                finalGradient,
-                finalBorder
-              )}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className={clsx(
-                    "flex h-10 w-10 items-center justify-center rounded-xl",
-                    finalIconBg
-                  )}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                  {label}
-                </span>
-              </div>
-              <p className={clsx("text-xl font-bold tabular-nums", finalColor)}>
-                {formatCurrency(summary[field] ?? 0)}
-              </p>
+      {/* Hero Balance Card — uses card gradient */}
+      <div
+        className="rounded-2xl p-6 mb-6 text-white shadow-lg"
+        style={{ background: `linear-gradient(135deg, ${activeGradient.from}, ${activeGradient.to})` }}
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+            <Wallet className="h-5 w-5" />
+          </div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/70">Saldo</span>
+        </div>
+        <p className="text-3xl font-bold tabular-nums mb-4">
+          {formatCurrency(summary.balance ?? 0)}
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-white/15 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingUp className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Pemasukan</span>
             </div>
-          );
-        })}
+            <p className="text-base font-bold tabular-nums">{formatCurrency(summary.totalIncome ?? 0)}</p>
+          </div>
+          <div className="rounded-xl bg-white/15 p-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <TrendingDown className="h-3.5 w-3.5" />
+              <span className="text-[10px] font-semibold uppercase">Pengeluaran</span>
+            </div>
+            <p className="text-base font-bold tabular-nums">{formatCurrency(summary.totalExpense ?? 0)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Transaksi Terbaru */}
-      <div className="rounded-2xl bg-white border border-gray-100 p-6">
+      <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">
             Transaksi Terbaru
           </h2>
           <button
@@ -193,13 +152,13 @@ const DashboardPage = memo(function DashboardPage() {
           </div>
         ) : (
           <div className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
-              <Sparkles className="h-8 w-8 text-gray-200" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--bg-tertiary)]">
+              <Sparkles className="h-8 w-8 text-[var(--text-tertiary)]" />
             </div>
-            <p className="text-sm font-medium text-gray-500">
+            <p className="text-sm font-medium text-[var(--text-secondary)]">
               Belum ada transaksi
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-[var(--text-tertiary)] mt-1">
               Tap tombol <span className="text-indigo-600 font-semibold">+</span> untuk menambah transaksi pertama
             </p>
           </div>
@@ -214,7 +173,7 @@ const DashboardPage = memo(function DashboardPage() {
         className={clsx(
           "flex h-14 w-14 items-center justify-center rounded-full",
           "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white",
-          "shadow-lg shadow-indigo-300/50",
+          "shadow-lg shadow-indigo-300/50 dark:shadow-indigo-900/50",
           "hover:shadow-xl hover:shadow-indigo-300/60 hover:scale-105 active:scale-95",
           "transition-all duration-200 cursor-pointer"
         )}

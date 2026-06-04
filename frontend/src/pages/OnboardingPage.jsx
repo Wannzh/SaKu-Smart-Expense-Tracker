@@ -1,8 +1,10 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useWallet } from "../hooks/useWallet";
+import { useTheme } from "../hooks/useTheme";
 import { formatCurrency } from "../utils/format";
+import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import {
   ChevronLeft,
   ChevronRight,
@@ -11,10 +13,16 @@ import {
   BellOff,
   CheckCircle2,
   Sparkles,
+  Sun,
+  Moon,
+  Monitor,
+  Check,
+  TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import clsx from "clsx";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 6;
 
 /* ─── Step 1: Welcome ────────────────────────────────────── */
 const StepWelcome = memo(function StepWelcome({ user }) {
@@ -142,7 +150,7 @@ const StepWallet = memo(function StepWallet({ amount, onAmountChange }) {
             value={amount}
             onChange={(e) => onAmountChange(e.target.value)}
             placeholder="0"
-            className="w-full rounded-xl border border-gray-300 pl-10 pr-4 py-3.5 text-lg font-bold text-gray-800 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-3.5 text-lg font-bold text-gray-800 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
           />
         </div>
       </div>
@@ -154,7 +162,91 @@ const StepWallet = memo(function StepWallet({ amount, onAmountChange }) {
   );
 });
 
-/* ─── Step 5: Done ───────────────────────────────────────── */
+/* ─── Step 5: Theme & Card Style ─────────────────────────── */
+/* NOTE: This step DOES use CSS variables because it's the theme picker
+   and needs to reactively preview light/dark as the user switches. */
+const themeModes = [
+  { value: "light", icon: Sun, label: "Terang" },
+  { value: "dark", icon: Moon, label: "Gelap" },
+  { value: "system", icon: Monitor, label: "Sistem" },
+];
+
+const StepTheme = memo(function StepTheme({ theme, cardStyle, resolvedTheme, onThemeChange, onCardStyleChange }) {
+  const gradients = resolvedTheme === "dark" ? DARK_CARD_GRADIENTS : LIGHT_CARD_GRADIENTS;
+  const safeIndex = Math.min(cardStyle, gradients.length - 1);
+  const activeGradient = gradients[safeIndex];
+
+  return (
+    <div className="flex flex-col items-center">
+      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 text-center">Pilih Gaya Kamu</h2>
+      <p className="text-sm text-[var(--text-tertiary)] mb-5 text-center">Sesuaikan SaKu dengan kepribadianmu</p>
+
+      {/* Preview card */}
+      <div className="w-full rounded-2xl p-5 mb-5 text-white shadow-lg"
+        style={{ background: `linear-gradient(135deg, ${activeGradient.from}, ${activeGradient.to})` }}>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/20">
+            <Wallet className="h-4 w-4" />
+          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Total Saldo (IDR)</span>
+        </div>
+        <p className="text-2xl font-bold tabular-nums mb-3">Rp 5.000.000</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-white/15 p-2.5">
+            <div className="flex items-center gap-1 mb-1">
+              <TrendingUp className="h-3 w-3" />
+              <span className="text-[9px] font-semibold uppercase">Pemasukan</span>
+            </div>
+            <p className="text-sm font-bold tabular-nums">Rp 8.500.000</p>
+          </div>
+          <div className="rounded-lg bg-white/15 p-2.5">
+            <div className="flex items-center gap-1 mb-1">
+              <TrendingDown className="h-3 w-3" />
+              <span className="text-[9px] font-semibold uppercase">Pengeluaran</span>
+            </div>
+            <p className="text-sm font-bold tabular-nums">Rp 3.500.000</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Theme mode */}
+      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 self-start">Mode Tema</p>
+      <div className="w-full flex gap-2 mb-5">
+        {themeModes.map(({ value, icon: Icon, label }) => (
+          <button key={value} onClick={() => onThemeChange(value)}
+            className={clsx(
+              "flex-1 flex flex-col items-center gap-1.5 rounded-xl py-3 border-2 text-xs font-medium transition-all cursor-pointer",
+              theme === value
+                ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
+                : "border-[var(--border-color)] text-[var(--text-tertiary)] hover:border-gray-300"
+            )}>
+            <Icon className="h-5 w-5" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Card style swatches */}
+      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 self-start">Gaya Kartu</p>
+      <div className="w-full flex gap-2 overflow-x-auto pb-1">
+        {gradients.map((g, i) => (
+          <button key={i} onClick={() => onCardStyleChange(i)}
+            className={clsx(
+              "shrink-0 h-14 w-14 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-center",
+              safeIndex === i ? "border-white shadow-lg scale-110 ring-2 ring-indigo-500" : "border-transparent hover:scale-105"
+            )}
+            style={{ background: `linear-gradient(135deg, ${g.from}, ${g.to})` }}
+            title={g.name}
+          >
+            {safeIndex === i && <Check className="h-5 w-5 text-white drop-shadow" />}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+/* ─── Step 6: Done ───────────────────────────────────────── */
 const StepDone = memo(function StepDone({ user, walletBalance }) {
   return (
     <div className="flex flex-col items-center text-center">
@@ -209,12 +301,16 @@ const OnboardingPage = memo(function OnboardingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { createWallet } = useWallet();
+  const { theme, resolvedTheme, cardStyle, setTheme, setCardStyle } = useTheme();
 
   const [step, setStep] = useState(0);
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [walletAmount, setWalletAmount] = useState("");
   const [walletBalance, setWalletBalance] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Use CSS vars only on step 5 (theme picker), hardcoded light elsewhere
+  const isThemeStep = step === 4;
 
   const handleNotifToggle = useCallback(async () => {
     if (!notifEnabled && "Notification" in window) {
@@ -248,6 +344,9 @@ const OnboardingPage = memo(function OnboardingPage() {
       return;
     }
 
+    // Step 5 (index 4) — theme is already saved reactively via context
+    // Just advance
+
     // Last step — finish
     if (step === TOTAL_STEPS - 1) {
       localStorage.setItem("saku_onboarding_done", "true");
@@ -262,18 +361,26 @@ const OnboardingPage = memo(function OnboardingPage() {
     setStep((s) => Math.max(0, s - 1));
   }, []);
 
-  const buttonText = (() => {
+  const buttonText = useMemo(() => {
     if (step === 3) return isProcessing ? "Membuat wallet..." : "Lanjut";
     if (step === TOTAL_STEPS - 1) return "Mulai SaKu 🚀";
     return "Lanjut";
-  })();
+  }, [step, isProcessing]);
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-[#F0F2F5]">
+    <div className={clsx(
+      "fixed inset-0 flex flex-col",
+      isThemeStep ? "bg-[var(--bg-primary)]" : "bg-[#F0F2F5]"
+    )}>
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         {step > 0 ? (
-          <button onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:bg-white hover:text-gray-600 transition-colors cursor-pointer">
+          <button onClick={handleBack} className={clsx(
+            "flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer",
+            isThemeStep
+              ? "text-[var(--text-tertiary)] hover:bg-[var(--card-bg)] hover:text-[var(--text-secondary)]"
+              : "text-gray-400 hover:bg-white hover:text-gray-600"
+          )}>
             <ChevronLeft className="h-5 w-5" />
           </button>
         ) : (
@@ -294,13 +401,22 @@ const OnboardingPage = memo(function OnboardingPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center px-8">
+      <div className="flex-1 flex items-center justify-center px-8 overflow-y-auto">
         <div className="w-full max-w-sm animate-fade-slide-up" key={step}>
           {step === 0 && <StepWelcome user={user} />}
           {step === 1 && <StepCurrency />}
           {step === 2 && <StepNotification enabled={notifEnabled} onToggle={handleNotifToggle} />}
           {step === 3 && <StepWallet amount={walletAmount} onAmountChange={setWalletAmount} />}
-          {step === 4 && <StepDone user={user} walletBalance={walletBalance} />}
+          {step === 4 && (
+            <StepTheme
+              theme={theme}
+              cardStyle={cardStyle}
+              resolvedTheme={resolvedTheme}
+              onThemeChange={setTheme}
+              onCardStyleChange={setCardStyle}
+            />
+          )}
+          {step === 5 && <StepDone user={user} walletBalance={walletBalance} />}
         </div>
       </div>
 
@@ -313,7 +429,7 @@ const OnboardingPage = memo(function OnboardingPage() {
             "w-full flex items-center justify-center gap-2 rounded-2xl py-4 text-sm font-semibold transition-all cursor-pointer shadow-lg",
             step === TOTAL_STEPS - 1
               ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200/50"
-              : "bg-gray-900 text-white hover:bg-gray-800 shadow-gray-300/50",
+              : "bg-[#1E293B] text-white hover:bg-[#334155] shadow-gray-300/50",
             isProcessing && "opacity-70 cursor-not-allowed"
           )}
         >

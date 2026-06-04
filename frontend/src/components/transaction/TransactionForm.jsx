@@ -49,7 +49,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {/* Type toggle */}
-      <div className="flex gap-2 rounded-xl bg-gray-100 p-1">
+      <div className="flex gap-2 rounded-xl bg-[var(--bg-tertiary)] p-1">
         <button
           type="button"
           onClick={() => setForm((prev) => ({ ...prev, type: "EXPENSE" }))}
@@ -57,7 +57,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
             "flex-1 rounded-lg py-2 text-sm font-semibold transition-all cursor-pointer",
             form.type === "EXPENSE"
               ? "bg-red-500 text-white shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
           Pengeluaran
@@ -69,7 +69,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
             "flex-1 rounded-lg py-2 text-sm font-semibold transition-all cursor-pointer",
             form.type === "INCOME"
               ? "bg-emerald-500 text-white shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
           Pemasukan
@@ -89,12 +89,12 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
 
       {/* Wallet dropdown */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">Wallet</label>
+        <label className="text-sm font-medium text-[var(--text-primary)]">Wallet</label>
         <select
           name="walletId"
           value={form.walletId}
           onChange={handleChange}
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+          className="w-full rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-[var(--bg-secondary)]"
         >
           <option value="">Tanpa wallet</option>
           {wallets.map((w) => (
@@ -107,12 +107,12 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
 
       {/* Category dropdown */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">Kategori</label>
+        <label className="text-sm font-medium text-[var(--text-primary)]">Kategori</label>
         <select
           name="categoryId"
           value={form.categoryId}
           onChange={handleChange}
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-900 outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-white"
+          className="w-full rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-[var(--bg-secondary)]"
         >
           <option value="">Pilih kategori</option>
           {categories.map((cat) => (

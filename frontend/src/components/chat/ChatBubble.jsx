@@ -67,7 +67,7 @@ const ChatBubble = memo(function ChatBubble({ message }) {
       {/* Avatar */}
       <div className={clsx(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold mt-1",
-        isUser ? "bg-indigo-600 text-white" : "bg-amber-100 text-amber-600"
+        isUser ? "bg-indigo-600 text-white" : "bg-amber-100 dark:bg-amber-900/30 text-amber-600"
       )}>
         {isUser ? <User className="h-4 w-4" /> : <Wallet className="h-4 w-4" />}
       </div>
@@ -78,7 +78,7 @@ const ChatBubble = memo(function ChatBubble({ message }) {
           "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
           isUser
             ? "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm"
-            : "bg-white border border-gray-100 text-gray-700 rounded-bl-sm shadow-sm"
+            : "bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--text-primary)] rounded-bl-sm shadow-sm"
         )}>
           {isUser ? (
             <span className="whitespace-pre-wrap">{message.content}</span>
@@ -86,7 +86,7 @@ const ChatBubble = memo(function ChatBubble({ message }) {
             <div className="flex flex-col gap-0.5">{content}</div>
           )}
         </div>
-        <p className={clsx("text-[10px] text-gray-300 mt-1 px-1", isUser ? "text-right" : "text-left")}>
+        <p className={clsx("text-[10px] text-[var(--text-tertiary)] mt-1 px-1", isUser ? "text-right" : "text-left")}>
           {time}
         </p>
       </div>

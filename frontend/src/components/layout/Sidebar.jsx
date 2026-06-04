@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import ThemeToggle from "../common/ThemeToggle";
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -30,22 +31,22 @@ const Sidebar = memo(function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-white border-r border-gray-200">
+    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)]">
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-200">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-200/40">
           <Wallet className="h-5 w-5 text-white" />
         </div>
         <div>
           <h1 className="text-xl font-bold tracking-tight text-indigo-600">
             SaKu
           </h1>
-          <p className="text-[11px] text-gray-400 -mt-0.5">Smart Expense Tracker</p>
+          <p className="text-[11px] text-[var(--text-tertiary)] -mt-0.5">Smart Expense Tracker</p>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="mx-4 h-px bg-gray-100" />
+      <div className="mx-4 h-px bg-[var(--border-color)]" />
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
@@ -59,8 +60,8 @@ const Sidebar = memo(function Sidebar() {
                   clsx(
                     "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                      : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/40"
+                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-indigo-600"
                   )
                 }
               >
@@ -73,20 +74,29 @@ const Sidebar = memo(function Sidebar() {
       </nav>
 
       {/* Divider */}
-      <div className="mx-4 h-px bg-gray-100" />
+      <div className="mx-4 h-px bg-[var(--border-color)]" />
 
-      {/* User Info + Logout */}
+      {/* Theme + User + Logout */}
       <div className="p-4">
+        {/* Theme section */}
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-2 px-2">
+          Tampilan
+        </p>
+        <ThemeToggle />
+
+        {/* Divider */}
+        <div className="my-3 h-px bg-[var(--border-color)]" />
+
         {/* User info */}
         <div className="flex items-center gap-3 mb-3 px-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
             {user?.name?.charAt(0)?.toUpperCase() || "U"}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-800">
+            <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
               {user?.name || "User"}
             </p>
-            <p className="truncate text-xs text-gray-400">
+            <p className="truncate text-xs text-[var(--text-tertiary)]">
               {user?.email || ""}
             </p>
           </div>
@@ -95,7 +105,7 @@ const Sidebar = memo(function Sidebar() {
         {/* Logout button */}
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 cursor-pointer"
         >
           <LogOut className="h-5 w-5 shrink-0" />
           Keluar

@@ -59,7 +59,7 @@ const RegisterPage = memo(function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-amber-50/30 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-amber-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 px-4">
       <div className="w-full max-w-md animate-fade-slide-up">
         {/* Logo & Tagline */}
         <div className="text-center mb-8">
@@ -73,8 +73,8 @@ const RegisterPage = memo(function RegisterPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100/80 p-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">
+        <div className="bg-white dark:bg-[var(--card-bg)] backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100/80 dark:border-[var(--border-color)] p-8">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-[var(--text-primary)] mb-6">
             Buat akun baru
           </h2>
 
@@ -123,7 +123,7 @@ const RegisterPage = memo(function RegisterPage() {
         </div>
 
         {/* Link ke login */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-gray-500 dark:text-[var(--text-secondary)] mt-6">
           Sudah punya akun?{" "}
           <Link
             to="/login"

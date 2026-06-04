@@ -63,13 +63,13 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
 
       {/* Type toggle */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">Tipe</label>
+        <label className="text-sm font-medium text-[var(--text-primary)]">Tipe</label>
         <div className="flex gap-2">
           {walletTypes.map(({ value, label, icon }) => (
             <button key={value} type="button" onClick={() => setForm((prev) => ({ ...prev, type: value, icon }))}
               className={clsx(
                 "flex-1 flex flex-col items-center gap-1 rounded-xl py-3 border-2 text-sm font-medium transition-all cursor-pointer",
-                form.type === value ? "border-indigo-600 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-500 hover:border-gray-300"
+                form.type === value ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300" : "border-[var(--border-color)] text-[var(--text-secondary)] hover:border-gray-300"
               )}>
               <span className="text-lg">{icon}</span>
               {label}
@@ -90,7 +90,7 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
 
       {/* Color picker */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-gray-700">Warna</label>
+        <label className="text-sm font-medium text-[var(--text-primary)]">Warna</label>
         <div className="flex gap-2 flex-wrap">
           {defaultColors.map((c) => (
             <button key={c} type="button" onClick={() => setForm((prev) => ({ ...prev, color: c }))}
@@ -124,7 +124,7 @@ const WalletCard = memo(function WalletCard({ wallet, isActive, onClick, onEdit,
       className={clsx(
         "rounded-2xl p-5 border-2 cursor-pointer transition-all duration-200 group",
         "hover:shadow-lg hover:-translate-y-0.5",
-        isActive ? "border-indigo-600 shadow-md" : "border-transparent bg-white shadow-sm"
+        isActive ? "border-indigo-600 shadow-md" : "border-transparent bg-[var(--card-bg)] shadow-sm"
       )}
       style={{ borderColor: isActive ? wallet.color || "#4F46E5" : undefined }}
     >
@@ -134,28 +134,28 @@ const WalletCard = memo(function WalletCard({ wallet, isActive, onClick, onEdit,
             {wallet.icon || "💵"}
           </div>
           <div>
-            <p className="text-sm font-semibold text-gray-800">{wallet.name}</p>
-            <p className="text-[11px] text-gray-400 capitalize">{wallet.type}{wallet.bankName ? ` • ${wallet.bankName}` : ""}</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{wallet.name}</p>
+            <p className="text-[11px] text-[var(--text-tertiary)] capitalize">{wallet.type}{wallet.bankName ? ` • ${wallet.bankName}` : ""}</p>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button onClick={(e) => { e.stopPropagation(); onEdit(wallet); }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 transition-colors cursor-pointer">
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600 transition-colors cursor-pointer">
             <Pencil className="h-3.5 w-3.5" />
           </button>
           <button onClick={(e) => { e.stopPropagation(); onDelete(wallet); }}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors cursor-pointer">
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 transition-colors cursor-pointer">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
 
-      <p className={clsx("text-xl font-bold tabular-nums", isNegative ? "text-red-600" : "text-gray-800")}>
+      <p className={clsx("text-xl font-bold tabular-nums", isNegative ? "text-red-600 dark:text-red-400" : "text-[var(--text-primary)]")}>
         {formatCurrency(balance)}
       </p>
-      <p className="text-[11px] text-gray-400 mt-1">{wallet._count?.transactions || 0} transaksi</p>
+      <p className="text-[11px] text-[var(--text-tertiary)] mt-1">{wallet._count?.transactions || 0} transaksi</p>
     </div>
   );
 });
@@ -208,8 +208,8 @@ const WalletPage = memo(function WalletPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Wallet</h1>
-          <p className="text-sm text-gray-400 mt-1">Kelola semua dompet dan rekening kamu</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Wallet</h1>
+          <p className="text-sm text-[var(--text-tertiary)] mt-1">Kelola semua dompet dan rekening kamu</p>
         </div>
         <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4" />
@@ -242,49 +242,49 @@ const WalletPage = memo(function WalletPage() {
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl bg-white border border-gray-100 py-16 text-center mb-8">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-50">
-            <Sparkles className="h-8 w-8 text-gray-200" />
+        <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] py-16 text-center mb-8">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--bg-tertiary)]">
+            <Sparkles className="h-8 w-8 text-[var(--text-tertiary)]" />
           </div>
-          <p className="text-sm font-medium text-gray-500">Belum ada wallet</p>
-          <p className="text-xs text-gray-400 mt-1">Klik Tambah untuk membuat wallet pertama</p>
+          <p className="text-sm font-medium text-[var(--text-secondary)]">Belum ada wallet</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Klik Tambah untuk membuat wallet pertama</p>
         </div>
       )}
 
       {/* Active Wallet Detail */}
       {activeWallet && (
-        <div className="rounded-2xl bg-white border border-gray-100 p-6 animate-fade-slide-up">
+        <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-6 animate-fade-slide-up">
           <div className="flex items-center gap-3 mb-5">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl text-lg"
               style={{ backgroundColor: (activeWallet.color || "#4F46E5") + "15" }}>
               {activeWallet.icon || "💵"}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-800">{activeWallet.name}</h2>
-              <p className="text-xs text-gray-400 capitalize">{activeWallet.type}{activeWallet.bankName ? ` • ${activeWallet.bankName}` : ""}</p>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">{activeWallet.name}</h2>
+              <p className="text-xs text-[var(--text-tertiary)] capitalize">{activeWallet.type}{activeWallet.bankName ? ` • ${activeWallet.bankName}` : ""}</p>
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="rounded-xl bg-emerald-50 p-4">
+            <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-4 w-4 text-emerald-600" />
                 <span className="text-[11px] font-semibold text-emerald-600 uppercase">Pemasukan</span>
               </div>
-              <p className="text-lg font-bold text-emerald-700 tabular-nums">{formatCurrency(activeWallet.totalIncome || 0)}</p>
+              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">{formatCurrency(activeWallet.totalIncome || 0)}</p>
             </div>
-            <div className="rounded-xl bg-red-50 p-4">
+            <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingDown className="h-4 w-4 text-red-500" />
                 <span className="text-[11px] font-semibold text-red-500 uppercase">Pengeluaran</span>
               </div>
-              <p className="text-lg font-bold text-red-600 tabular-nums">{formatCurrency(activeWallet.totalExpense || 0)}</p>
+              <p className="text-lg font-bold text-red-600 dark:text-red-400 tabular-nums">{formatCurrency(activeWallet.totalExpense || 0)}</p>
             </div>
           </div>
 
           {/* Recent transactions */}
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">Transaksi Terbaru</h3>
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Transaksi Terbaru</h3>
           {activeWallet.transactions?.length > 0 ? (
             <div className="flex flex-col gap-2">
               {activeWallet.transactions.map((tx) => (
@@ -292,7 +292,7 @@ const WalletPage = memo(function WalletPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-400 py-6 text-center">Belum ada transaksi di wallet ini</p>
+            <p className="text-sm text-[var(--text-tertiary)] py-6 text-center">Belum ada transaksi di wallet ini</p>
           )}
         </div>
       )}
@@ -311,11 +311,11 @@ const WalletPage = memo(function WalletPage() {
     {/* Modal Delete */}
     <Modal isOpen={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} title="Hapus Wallet">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30">
           <AlertTriangle className="h-7 w-7 text-red-500" />
         </div>
-        <h4 className="text-base font-semibold text-gray-800 mb-1">Yakin hapus wallet ini?</h4>
-        <p className="text-sm text-gray-400 mb-6">Transaksi terkait tidak akan dihapus, hanya koneksi walletnya.</p>
+        <h4 className="text-base font-semibold text-[var(--text-primary)] mb-1">Yakin hapus wallet ini?</h4>
+        <p className="text-sm text-[var(--text-tertiary)] mb-6">Transaksi terkait tidak akan dihapus, hanya koneksi walletnya.</p>
         <div className="flex gap-3">
           <Button variant="secondary" onClick={() => setDeleteTarget(null)} className="flex-1">Batal</Button>
           <Button variant="danger" onClick={handleDelete} isLoading={isDeleting} className="flex-1">

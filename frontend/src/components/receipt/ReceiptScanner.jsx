@@ -61,8 +61,8 @@ const ReceiptScanner = memo(function ReceiptScanner({ onFileSelect, preview }) {
       className={clsx(
         "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
         preview
-          ? "border-indigo-300 bg-indigo-50/30 p-2"
-          : "border-gray-300 bg-gray-50 p-10 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50",
+          ? "border-indigo-300 bg-indigo-50/30 dark:bg-indigo-900/10 p-2"
+          : "border-[var(--border-color)] bg-[var(--bg-tertiary)] p-10 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10",
         isDragging && "border-indigo-500 bg-indigo-50 scale-[1.01]"
       )}
     >
@@ -91,16 +91,16 @@ const ReceiptScanner = memo(function ReceiptScanner({ onFileSelect, preview }) {
         </div>
       ) : (
         <>
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 mb-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 mb-4">
             <Camera className="h-7 w-7 text-indigo-600" />
           </div>
-          <p className="text-sm font-semibold text-gray-700 mb-1">
+          <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">
             Upload foto struk
           </p>
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-[var(--text-tertiary)] text-center">
             Drag & drop atau klik untuk memilih file
           </p>
-          <div className="flex items-center gap-2 mt-4 text-xs text-gray-300">
+          <div className="flex items-center gap-2 mt-4 text-xs text-[var(--text-tertiary)]">
             <Upload className="h-3.5 w-3.5" />
             <span>JPG, PNG, WebP • Maks. 5MB</span>
           </div>

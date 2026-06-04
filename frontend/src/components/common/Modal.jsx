@@ -44,16 +44,16 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children }) {
     >
       <div
         className={clsx(
-          "w-full max-w-md bg-white rounded-2xl shadow-xl",
-          "animate-in zoom-in-95 duration-200"
+          "w-full max-w-md rounded-2xl shadow-xl",
+          "bg-[var(--card-bg)]"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{title}</h3>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
