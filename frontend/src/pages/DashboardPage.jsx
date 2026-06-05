@@ -135,27 +135,32 @@ const MenuGrid = memo(function MenuGrid({ onNavigate }) {
   );
 
   return (
-    <div className="grid grid-cols-4 gap-3">
-      {menuItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.label}
-            onClick={() => handleClick(item)}
-            className="flex flex-col items-center gap-1.5 py-2 cursor-pointer group"
-          >
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-active:scale-95"
-              style={{ backgroundColor: item.color + "18" }}
+    <div>
+      <h2 className="text-base font-semibold text-[var(--text-primary)] mb-3">
+        Menu
+      </h2>
+      <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 scrollbar-none">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              onClick={() => handleClick(item)}
+              className="flex flex-col items-center gap-1.5 py-2 cursor-pointer group shrink-0 lg:shrink w-20 lg:w-auto"
             >
-              <Icon className="h-5 w-5" style={{ color: item.color }} />
-            </div>
-            <span className="text-[11px] font-medium text-[var(--text-secondary)] leading-tight text-center">
-              {item.label}
-            </span>
-          </button>
-        );
-      })}
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 group-active:scale-95"
+                style={{ backgroundColor: item.color + "18" }}
+              >
+                <Icon className="h-5 w-5" style={{ color: item.color }} />
+              </div>
+              <span className="text-[11px] font-medium text-[var(--text-secondary)] leading-tight text-center">
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 });
@@ -205,7 +210,7 @@ const QuickRecord = memo(function QuickRecord({ onNavigate }) {
   return (
     <div>
       <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Rekam Cepat</h3>
-      <div className="flex gap-5 justify-center">
+      <div className="flex gap-6 justify-start lg:justify-center">
         {quickActions.map((item) => {
           const Icon = item.icon;
           return (
