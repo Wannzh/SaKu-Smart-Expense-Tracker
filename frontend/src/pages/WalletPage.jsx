@@ -15,15 +15,20 @@ import {
   Sparkles,
   TrendingUp,
   TrendingDown,
+  Banknote,
+  Building2,
+  Smartphone,
 } from "lucide-react";
 import clsx from "clsx";
 
 // ─── Wallet type options ────────────────────────────────────
 const walletTypes = [
-  { value: "cash", label: "Tunai", icon: "💵" },
-  { value: "bank", label: "Bank", icon: "🏦" },
-  { value: "ewallet", label: "E-Wallet", icon: "💳" },
+  { value: "cash", label: "Tunai", icon: Banknote },
+  { value: "bank", label: "Bank", icon: Building2 },
+  { value: "ewallet", label: "E-Wallet", icon: Smartphone },
 ];
+
+const walletIconMap = { cash: Banknote, bank: Building2, ewallet: Smartphone };
 
 const defaultColors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#6B7280"];
 
@@ -35,7 +40,7 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
     name: initialData?.name || "",
     type: initialData?.type || "cash",
     initialBalance: initialData?.initialBalance?.toString() || "0",
-    icon: initialData?.icon || "💵",
+    icon: initialData?.icon || "cash",
     color: initialData?.color || "#4F46E5",
     bankName: initialData?.bankName || "",
   });
@@ -65,13 +70,13 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[var(--text-primary)]">Tipe</label>
         <div className="flex gap-2">
-          {walletTypes.map(({ value, label, icon }) => (
-            <button key={value} type="button" onClick={() => setForm((prev) => ({ ...prev, type: value, icon }))}
+          {walletTypes.map(({ value, label, icon: WIcon }) => (
+            <button key={value} type="button" onClick={() => setForm((prev) => ({ ...prev, type: value, icon: value }))}
               className={clsx(
                 "flex-1 flex flex-col items-center gap-1 rounded-xl py-3 border-2 text-sm font-medium transition-all cursor-pointer",
                 form.type === value ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300" : "border-[var(--border-color)] text-[var(--text-secondary)] hover:border-gray-300"
               )}>
-              <span className="text-lg">{icon}</span>
+              <WIcon className="h-5 w-5" style={{ color: form.type === value ? undefined : 'var(--text-tertiary)' }} />
               {label}
             </button>
           ))}
@@ -130,8 +135,8 @@ const WalletCard = memo(function WalletCard({ wallet, isActive, onClick, onEdit,
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl text-lg" style={{ backgroundColor: (wallet.color || "#4F46E5") + "15" }}>
-            {wallet.icon || "💵"}
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: (wallet.color || "#4F46E5") + "15" }}>
+            {(() => { const WI = walletIconMap[wallet.type] || Banknote; return <WI className="h-5 w-5" style={{ color: wallet.color || "#4F46E5" }} />; })()}
           </div>
           <div>
             <p className="text-sm font-semibold text-[var(--text-primary)]">{wallet.name}</p>
@@ -255,9 +260,9 @@ const WalletPage = memo(function WalletPage() {
       {activeWallet && (
         <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-6 animate-fade-slide-up">
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl text-lg"
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl"
               style={{ backgroundColor: (activeWallet.color || "#4F46E5") + "15" }}>
-              {activeWallet.icon || "💵"}
+              {(() => { const WI = walletIconMap[activeWallet.type] || Banknote; return <WI className="h-5 w-5" style={{ color: activeWallet.color || "#4F46E5" }} />; })()}
             </div>
             <div>
               <h2 className="text-lg font-semibold text-[var(--text-primary)]">{activeWallet.name}</h2>

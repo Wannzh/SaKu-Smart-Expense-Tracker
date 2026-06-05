@@ -5,6 +5,7 @@ import Button from "../common/Button";
 import Input from "../common/Input";
 import clsx from "clsx";
 import { toISODate } from "../../utils/format";
+import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
 const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, initialData }) {
   const { categories, getCategories } = useCategory();
@@ -60,6 +61,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
+          <ArrowDownCircle className="h-4 w-4 inline-block mr-1" />
           Pengeluaran
         </button>
         <button
@@ -72,6 +74,7 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
               : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
+          <ArrowUpCircle className="h-4 w-4 inline-block mr-1" />
           Pemasukan
         </button>
       </div>

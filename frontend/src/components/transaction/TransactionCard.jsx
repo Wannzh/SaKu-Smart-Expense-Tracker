@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { formatCurrency, formatDate } from "../../utils/format";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
 import clsx from "clsx";
 
 const TransactionCard = memo(function TransactionCard({
@@ -28,7 +28,13 @@ const TransactionCard = memo(function TransactionCard({
             : "bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/30 dark:to-red-800/20"
         )}
       >
-        {transaction.category?.icon || (isIncome ? "💰" : "💸")}
+        {transaction.category?.icon ? (
+          <span className="text-lg">{transaction.category.icon}</span>
+        ) : isIncome ? (
+          <TrendingUp className="h-5 w-5 text-emerald-500" />
+        ) : (
+          <TrendingDown className="h-5 w-5 text-red-500" />
+        )}
       </div>
 
       {/* Info */}

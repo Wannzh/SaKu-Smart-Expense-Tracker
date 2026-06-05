@@ -19,6 +19,7 @@ import {
   Check,
   TrendingUp,
   TrendingDown,
+  Banknote,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -133,8 +134,8 @@ const StepWallet = memo(function StepWallet({ amount, onAmountChange }) {
 
       <div className="w-full rounded-2xl bg-white border border-gray-200 p-5 shadow-sm mb-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-lg">
-            💵
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50">
+            <Banknote className="h-5 w-5 text-indigo-600" />
           </div>
           <div>
             <p className="text-sm font-bold text-gray-800">Cash</p>
@@ -280,7 +281,7 @@ const StepDone = memo(function StepDone({ user, walletBalance }) {
             <p className="text-xs text-indigo-200">Wallet Cash</p>
             <p className="text-lg font-bold tabular-nums">{formatCurrency(walletBalance || 0)}</p>
           </div>
-          <span className="text-2xl">💵</span>
+          <Banknote className="h-6 w-6 text-white/80" />
         </div>
       </div>
 
@@ -331,7 +332,7 @@ const OnboardingPage = memo(function OnboardingPage() {
           name: "Cash",
           type: "cash",
           initialBalance: bal,
-          icon: "💵",
+          icon: "cash",
           color: "#4F46E5",
         });
         setWalletBalance(bal);
