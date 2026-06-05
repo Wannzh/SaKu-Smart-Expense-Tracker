@@ -56,6 +56,7 @@ const TransactionForm = memo(function TransactionForm({
   const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
 
   const dateInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const [slideUp, setSlideUp] = useState(false);
   const [dragY, setDragY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -204,6 +205,17 @@ const TransactionForm = memo(function TransactionForm({
     }, 200);
   }, [onCancel, onClose]);
 
+  const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+
+  const handleCameraClick = useCallback(() => {
+    if (isMobile) {
+      cameraInputRef.current?.click();
+    } else {
+      handleClose();
+      navigate("/scan");
+    }
+  }, [isMobile, handleClose, navigate]);
+
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     
@@ -351,10 +363,7 @@ const TransactionForm = memo(function TransactionForm({
             {/* Camera Button */}
             <button
               type="button"
-              onClick={() => {
-                handleClose();
-                navigate("/scan");
-              }}
+              onClick={handleCameraClick}
               className="p-3 flex items-center justify-center text-[var(--text-secondary)] hover:text-indigo-600 transition-colors cursor-pointer shrink-0"
               title="Scan Struk"
             >
@@ -733,6 +742,21 @@ const TransactionForm = memo(function TransactionForm({
             onChange={handleChange}
             className="sr-only"
             required
+          />
+
+          {/* Hidden Camera Input for Mobile */}
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              handleClose();
+              navigate("/scan", { state: { capturedFile: file } });
+            }}
           />
         </form>
       </div>

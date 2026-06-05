@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useReceipt } from "../hooks/useReceipt";
 import { useCategory } from "../hooks/useCategory";
 import ReceiptScanner from "../components/receipt/ReceiptScanner";
@@ -196,6 +196,7 @@ const SuccessStep = memo(function SuccessStep({ onReset, onViewTransactions }) {
 // ─── Main ───────────────────────────────────────────────────
 const ScanPage = memo(function ScanPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isScanning, isConfirming, scanResult, scanReceipt, confirmReceipt, resetScan } = useReceipt();
   const { categories, getCategories } = useCategory();
 
@@ -204,6 +205,24 @@ const ScanPage = memo(function ScanPage() {
   const [step, setStep] = useState("upload");
 
   useEffect(() => { getCategories(); }, [getCategories]);
+
+  useEffect(() => {
+    if (location.state?.capturedFile) {
+      const captured = location.state.capturedFile;
+      setFile(captured);
+      setPreview(URL.createObjectURL(captured));
+      setStep("upload");
+      
+      const triggerScan = async () => {
+        const result = await scanReceipt(captured);
+        if (result) setStep("review");
+      };
+      triggerScan();
+
+      // Clear state agar tidak re-trigger
+      window.history.replaceState({}, "");
+    }
+  }, [location.state, scanReceipt]);
 
   const handleFileSelect = useCallback((selectedFile) => {
     if (selectedFile) {
