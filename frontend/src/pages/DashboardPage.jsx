@@ -538,19 +538,15 @@ const DashboardPage = memo(function DashboardPage() {
         onDelete={handleDelete}
       />
 
-      <Modal
-        isOpen={Boolean(editTarget)}
-        onClose={() => setEditTarget(null)}
-        title="Ubah Transaksi"
-      >
-        {editTarget && (
-          <TransactionForm
-            initialData={editTarget}
-            onSubmit={handleEdit}
-            onCancel={() => setEditTarget(null)}
-          />
-        )}
-      </Modal>
+      {editTarget && (
+        <TransactionForm
+          isOpen={Boolean(editTarget)}
+          onClose={() => setEditTarget(null)}
+          initialData={editTarget}
+          onSubmit={handleEdit}
+          onCancel={() => setEditTarget(null)}
+        />
+      )}
     </div>
   );
 });

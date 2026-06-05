@@ -95,17 +95,13 @@ const BottomNav = memo(function BottomNav() {
         </div>
       </nav>
 
-      {/* Quick Add Modal */}
-      <Modal
+      {/* Quick Add Form */}
+      <TransactionForm
         isOpen={isQuickAddOpen}
         onClose={() => setIsQuickAddOpen(false)}
-        title="Tambah Transaksi"
-      >
-        <TransactionForm
-          onSubmit={handleQuickAdd}
-          onCancel={() => setIsQuickAddOpen(false)}
-        />
-      </Modal>
+        onSubmit={handleQuickAdd}
+        onCancel={() => setIsQuickAddOpen(false)}
+      />
     </>
   );
 });

@@ -202,33 +202,34 @@ const TransactionsPage = memo(function TransactionsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 mb-6 shadow-sm">
-        <div className="flex flex-wrap items-end gap-3 lg:gap-4">
-          {/* Type toggle — pill style */}
-          <div className="flex gap-1 rounded-full bg-[var(--bg-tertiary)] p-1">
-            {typeFilters.map(({ value, label }) => (
-              <button
-                key={value}
-                onClick={() => handleFilterChange("type", value)}
-                className={clsx(
-                  "rounded-full px-4 py-1.5 text-sm font-medium transition-all cursor-pointer",
-                  filters.type === value
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+      <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-3 lg:p-4 space-y-3 shadow-sm mb-6">
+        {/* Type toggle — pill style */}
+        <div className="flex overflow-x-auto gap-2 scrollbar-none pb-1">
+          {typeFilters.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => handleFilterChange("type", value)}
+              className={clsx(
+                "rounded-full px-4 py-1.5 text-sm font-medium transition-all cursor-pointer shrink-0",
+                filters.type === value
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
 
+        {/* Filters and Reset Wrapper */}
+        <div className="flex flex-col lg:flex-row gap-2 lg:items-end">
           {/* Category filter */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 w-full lg:w-auto">
             <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Kategori</label>
             <select
               value={filters.categoryId}
               onChange={(e) => handleFilterChange("categoryId", e.target.value)}
-              className="rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-[var(--bg-secondary)] transition-all"
+              className="w-full lg:w-auto rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 bg-[var(--bg-secondary)] transition-all"
             >
               <option value="">Semua</option>
               {categories.map((cat) => (
@@ -239,33 +240,36 @@ const TransactionsPage = memo(function TransactionsPage() {
             </select>
           </div>
 
-          {/* Date from */}
-          <div className="flex flex-col gap-1 flex-1 min-w-[8rem] sm:flex-none">
-            <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Dari</label>
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-              className="rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-            />
-          </div>
+          {/* Date inputs */}
+          <div className="grid grid-cols-2 lg:flex gap-2">
+            {/* Date from */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Dari</label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
+                className="w-full rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
+              />
+            </div>
 
-          {/* Date to */}
-          <div className="flex flex-col gap-1 flex-1 min-w-[8rem] sm:flex-none">
-            <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Sampai</label>
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-              className="rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-            />
+            {/* Date to */}
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Sampai</label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+                className="w-full rounded-xl border border-[var(--border-color)] px-3 py-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
+              />
+            </div>
           </div>
 
           {/* Reset */}
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-secondary)] transition-colors cursor-pointer w-full lg:w-auto border border-[var(--border-color)] lg:border-none"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset
@@ -322,17 +326,27 @@ const TransactionsPage = memo(function TransactionsPage() {
         </div>
       )}
 
-      {/* Modal Create */}
-      <Modal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} title="Tambah Transaksi">
-        <TransactionForm onSubmit={handleCreate} onCancel={() => setIsCreateOpen(false)} />
-      </Modal>
+      {/* Form Create */}
+      {isCreateOpen && (
+        <TransactionForm
+          isOpen={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          onSubmit={handleCreate}
+          onCancel={() => setIsCreateOpen(false)}
+        />
+      )}
 
-      {/* Modal Edit */}
-      <Modal isOpen={Boolean(editTarget)} onClose={() => setEditTarget(null)} title="Edit Transaksi">
-        {editTarget && (
-          <TransactionForm key={editTarget.id} initialData={editTarget} onSubmit={handleEdit} onCancel={() => setEditTarget(null)} />
-        )}
-      </Modal>
+      {/* Form Edit */}
+      {editTarget && (
+        <TransactionForm
+          key={editTarget.id}
+          isOpen={Boolean(editTarget)}
+          onClose={() => setEditTarget(null)}
+          initialData={editTarget}
+          onSubmit={handleEdit}
+          onCancel={() => setEditTarget(null)}
+        />
+      )}
 
       {/* Modal Delete */}
       <Modal isOpen={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} title="Hapus Transaksi">
