@@ -9,6 +9,7 @@ const TransactionCard = memo(function TransactionCard({
   onEdit,
   onDelete,
   showActions = false,
+  onClick,
 }) {
   const isIncome = transaction.type === "INCOME";
 
@@ -21,8 +22,10 @@ const TransactionCard = memo(function TransactionCard({
 
   return (
     <div
+      onClick={() => onClick?.(transaction)}
       className={clsx(
         "flex items-center gap-4 rounded-xl p-4 border group",
+        onClick ? "cursor-pointer" : "",
         "bg-[var(--card-bg)] border-[var(--border-color)]",
         "transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
       )}
@@ -64,14 +67,20 @@ const TransactionCard = memo(function TransactionCard({
       {showActions && (
         <div className="flex shrink-0 gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
-            onClick={() => onEdit?.(transaction)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.(transaction);
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-900/30 transition-colors cursor-pointer"
             title="Edit"
           >
             <Pencil className="h-4 w-4" />
           </button>
           <button
-            onClick={() => onDelete?.(transaction)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.(transaction);
+            }}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--text-tertiary)] hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/30 transition-colors cursor-pointer"
             title="Hapus"
           >

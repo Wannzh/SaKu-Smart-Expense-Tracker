@@ -5,6 +5,7 @@ import Button from "../common/Button";
 import Input from "../common/Input";
 import clsx from "clsx";
 import { toISODate } from "../../utils/format";
+import dayjs from "dayjs";
 import * as LucideIcons from "lucide-react";
 import CategoryPicker from "./CategoryPicker";
 
@@ -89,9 +90,11 @@ const TransactionForm = memo(function TransactionForm({ onSubmit, onCancel, init
     setIsLoading(true);
 
     try {
+      const dateWithTz = dayjs(form.date).format("YYYY-MM-DDTHH:mm:ssZ");
       await onSubmit({
         ...form,
         amount: parseFloat(form.amount),
+        date: dateWithTz,
         categoryId: form.categoryId || undefined,
         subCategoryId: form.subCategoryId || undefined,
         walletId: form.walletId || undefined,

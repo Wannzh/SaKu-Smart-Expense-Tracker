@@ -6,6 +6,7 @@ import ReceiptScanner from "../components/receipt/ReceiptScanner";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import { formatCurrency, toISODate } from "../utils/format";
+import dayjs from "dayjs";
 import {
   ScanLine,
   Loader2,
@@ -80,11 +81,12 @@ const ReviewStep = memo(function ReviewStep({ scanResult, categories, onConfirm,
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const dateWithTz = dayjs(form.date).format("YYYY-MM-DDTHH:mm:ssZ");
     await onConfirm({
       amount: parseFloat(form.amount),
       type: form.type,
       description: form.description,
-      date: form.date,
+      date: dateWithTz,
       categoryId: form.categoryId || undefined,
       rawText: scanResult?.rawText,
       parsedData: parsed,

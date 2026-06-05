@@ -5,6 +5,7 @@ import TransactionCard from "../components/transaction/TransactionCard";
 import TransactionForm from "../components/transaction/TransactionForm";
 import Modal from "../components/common/Modal";
 import Button from "../components/common/Button";
+import TransactionDetail from "../components/transaction/TransactionDetail";
 import {
   Plus,
   Loader2,
@@ -44,6 +45,8 @@ const TransactionsPage = memo(function TransactionsPage() {
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
     getCategories();
@@ -95,6 +98,16 @@ const TransactionsPage = memo(function TransactionsPage() {
       setIsDeleting(false);
     }
   };
+
+  const handleDetailDelete = useCallback(async (id) => {
+    await deleteTransaction(id);
+    getTransactions(cleanFilters);
+  }, [deleteTransaction, cleanFilters, getTransactions]);
+
+  const handleOpenDetail = useCallback((tx) => {
+    setSelectedTransaction(tx);
+    setIsDetailOpen(true);
+  }, []);
 
   return (
     <div className="animate-fade-slide-up">
@@ -202,6 +215,7 @@ const TransactionsPage = memo(function TransactionsPage() {
               showActions
               onEdit={setEditTarget}
               onDelete={setDeleteTarget}
+              onClick={handleOpenDetail}
             />
           ))}
         </div>
@@ -259,6 +273,15 @@ const TransactionsPage = memo(function TransactionsPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Transaction Detail Sheet */}
+      <TransactionDetail
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        transaction={selectedTransaction}
+        onEdit={setEditTarget}
+        onDelete={handleDetailDelete}
+      />
     </div>
   );
 });

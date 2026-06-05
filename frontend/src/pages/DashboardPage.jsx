@@ -4,6 +4,10 @@ import { useAuth } from "../hooks/useAuth";
 import { useTransaction } from "../hooks/useTransaction";
 import { useWallet } from "../hooks/useWallet";
 import { useTheme } from "../hooks/useTheme";
+import TransactionCard from "../components/transaction/TransactionCard";
+import TransactionDetail from "../components/transaction/TransactionDetail";
+import TransactionForm from "../components/transaction/TransactionForm";
+import Modal from "../components/common/Modal";
 import { formatCurrency } from "../utils/format";
 import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import {
@@ -316,6 +320,7 @@ const RecentTransactions = memo(function RecentTransactions({
   periodLabel,
   periodExpense,
   onNavigate,
+  onClickTransaction,
 }) {
   return (
     <div>
@@ -333,69 +338,14 @@ const RecentTransactions = memo(function RecentTransactions({
       </div>
 
       {transactions.length > 0 ? (
-        <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] divide-y divide-[var(--border-color)] overflow-hidden">
-          {transactions.map((tx) => {
-            const isIncome = tx.type === "INCOME";
-            return (
-              <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
-                {/* Category icon */}
-                <div
-                  className={clsx(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    isIncome
-                      ? "bg-emerald-50 dark:bg-emerald-900/20"
-                      : "bg-red-50 dark:bg-red-900/20"
-                  )}
-                >
-                  {tx.category?.icon ? (
-                    <span className="text-base">{tx.category.icon}</span>
-                  ) : isIncome ? (
-                    <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  ) : (
-                    <TrendingDown className="h-5 w-5 text-red-500 dark:text-red-400" />
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                    {tx.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <p className="text-[11px] text-[var(--text-tertiary)] truncate">
-                      {tx.description || "—"}
-                    </p>
-                    {tx.wallet && (
-                      <>
-                        <span className="text-[var(--text-tertiary)]">·</span>
-                        <span className="inline-flex items-center gap-0.5 text-[10px] text-[var(--text-tertiary)] shrink-0">
-                          {(() => { const WI = walletIcons[tx.wallet.type] || Banknote; return <WI className="h-3 w-3" />; })()}
-                          {tx.wallet.name}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Amount + time */}
-                <div className="text-right shrink-0">
-                  <p
-                    className={clsx(
-                      "text-sm font-bold tabular-nums",
-                      isIncome
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-red-500 dark:text-red-400"
-                    )}
-                  >
-                    {isIncome ? "+" : "-"}{formatCurrency(tx.amount)}
-                  </p>
-                  <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
-                    {dayjs(tx.date).format("HH:mm")}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
+        <div className="flex flex-col gap-3">
+          {transactions.map((tx) => (
+            <TransactionCard
+              key={tx.id}
+              transaction={tx}
+              onClick={onClickTransaction}
+            />
+          ))}
         </div>
       ) : (
         <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] py-10 text-center">
@@ -426,11 +376,14 @@ const RecentTransactions = memo(function RecentTransactions({
 const DashboardPage = memo(function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { transactions, getTransactions } = useTransaction();
+  const { transactions, getTransactions, updateTransaction, deleteTransaction } = useTransaction();
   const { wallets, getWallets } = useWallet();
   const { resolvedTheme, cardStyle } = useTheme();
 
   const [activePeriod, setActivePeriod] = useState("Bulan");
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState(null);
 
   // Fetch on mount
   useEffect(() => {
@@ -487,6 +440,26 @@ const DashboardPage = memo(function DashboardPage() {
     setActivePeriod(period);
   }, []);
 
+  const handleEdit = useCallback(async (data) => {
+    if (editTarget) {
+      await updateTransaction(editTarget.id, data);
+      setEditTarget(null);
+      getTransactions();
+      getWallets();
+    }
+  }, [editTarget, updateTransaction, getTransactions, getWallets]);
+
+  const handleDelete = useCallback(async (id) => {
+    await deleteTransaction(id);
+    getTransactions();
+    getWallets();
+  }, [deleteTransaction, getTransactions, getWallets]);
+
+  const handleOpenDetail = useCallback((tx) => {
+    setSelectedTransaction(tx);
+    setIsDetailOpen(true);
+  }, []);
+
   const firstName = user?.name?.split(" ")[0] || "User";
 
   return (
@@ -530,7 +503,30 @@ const DashboardPage = memo(function DashboardPage() {
         periodLabel={PERIOD_LABELS[activePeriod]}
         periodExpense={filteredExpense}
         onNavigate={handleNavigate}
+        onClickTransaction={handleOpenDetail}
       />
+
+      <TransactionDetail
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        transaction={selectedTransaction}
+        onEdit={setEditTarget}
+        onDelete={handleDelete}
+      />
+
+      <Modal
+        isOpen={Boolean(editTarget)}
+        onClose={() => setEditTarget(null)}
+        title="Ubah Transaksi"
+      >
+        {editTarget && (
+          <TransactionForm
+            initialData={editTarget}
+            onSubmit={handleEdit}
+            onCancel={() => setEditTarget(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 });
