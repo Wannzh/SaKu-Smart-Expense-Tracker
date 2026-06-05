@@ -36,6 +36,7 @@ model User {
   transactions Transaction[]
   chatSessions ChatSession[]
   wallets      Wallet[]
+  transfers    Transfer[]
 }
 
 model Category {
@@ -68,6 +69,8 @@ model Wallet {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   transactions Transaction[]
+  transfersFrom Transfer[] @relation("TransferFrom")
+  transfersTo   Transfer[] @relation("TransferTo")
 
   @@map("wallets")
 }
@@ -142,4 +145,23 @@ model ChatMessage {
 
   sessionId String
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model Transfer {
+  id            String   @id @default(cuid())
+  amount        Decimal  @db.Decimal(14, 2)
+  description   String?
+  date          DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  fromWalletId  String
+  toWalletId    String
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromWallet    Wallet   @relation("TransferFrom", fields: [fromWalletId], references: [id], onDelete: Cascade)
+  toWallet      Wallet   @relation("TransferTo", fields: [toWalletId], references: [id], onDelete: Cascade)
+
+  @@map("transfers")
 }

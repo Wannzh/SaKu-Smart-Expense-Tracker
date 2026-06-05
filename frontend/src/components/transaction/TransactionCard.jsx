@@ -12,13 +12,23 @@ const TransactionCard = memo(function TransactionCard({
   onClick,
 }) {
   const isIncome = transaction.type === "INCOME";
+  const isTransfer = transaction.type === "TRANSFER";
 
-  const IconComponent = LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
-  const catColor = transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
+  const IconComponent = isTransfer
+    ? LucideIcons.ArrowLeftRight
+    : LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
+
+  const catColor = isTransfer
+    ? "#6366F1"
+    : transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
 
   const subName = transaction.subCategory?.name;
   const desc = transaction.description;
-  const subtitle = subName && desc ? `${subName} · ${desc}` : (subName || desc || formatDate(transaction.date));
+  const subtitle = isTransfer
+    ? `${transaction.fromWallet?.name || "-"} → ${transaction.toWallet?.name || "-"}`
+    : subName && desc
+    ? `${subName} · ${desc}`
+    : subName || desc || formatDate(transaction.date);
 
   return (
     <div
@@ -41,7 +51,7 @@ const TransactionCard = memo(function TransactionCard({
       {/* Info */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-          {transaction.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
+          {isTransfer ? "Transfer" : transaction.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
         </p>
         <p className="truncate text-xs text-[var(--text-tertiary)] mt-0.5" title={subtitle}>
           {subtitle}
@@ -53,7 +63,11 @@ const TransactionCard = memo(function TransactionCard({
         <p
           className={clsx(
             "text-sm font-bold tabular-nums",
-            isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+            isTransfer
+              ? "text-[var(--text-secondary)]"
+              : isIncome
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-red-500 dark:text-red-400"
           )}
         >
           {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}

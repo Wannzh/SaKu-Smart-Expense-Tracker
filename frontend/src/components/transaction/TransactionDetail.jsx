@@ -27,9 +27,14 @@ const TransactionDetail = memo(function TransactionDetail({
 
   if (!isOpen || !transaction) return null;
 
+  const isTransfer = transaction.type === "TRANSFER";
   const isIncome = transaction.type === "INCOME";
-  const IconComponent = LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
-  const catColor = transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
+  const IconComponent = isTransfer
+    ? LucideIcons.ArrowLeftRight
+    : LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
+  const catColor = isTransfer
+    ? "#6366F1"
+    : transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
 
   const handleOverlayClick = (e) => {
     if (e.target === overlayRef.current) {
@@ -84,7 +89,11 @@ const TransactionDetail = memo(function TransactionDetail({
             <p
               className={clsx(
                 "text-2xl font-bold tabular-nums",
-                isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                isTransfer
+                  ? "text-[var(--text-secondary)]"
+                  : isIncome
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-red-500 dark:text-red-400"
               )}
             >
               {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}
@@ -95,69 +104,109 @@ const TransactionDetail = memo(function TransactionDetail({
             <span
               className={clsx(
                 "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-2",
-                isIncome
+                isTransfer
+                  ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
+                  : isIncome
                   ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                   : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400"
               )}
             >
-              {isIncome ? "Pemasukan" : "Pengeluaran"}
+              {isTransfer ? "Transfer" : isIncome ? "Pemasukan" : "Pengeluaran"}
             </span>
           </div>
 
           {/* Details Table */}
           <div className="border-t border-[var(--border-color)]">
-            {/* Row 1: Judul */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Judul</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
-                {transaction.description || "-"}
-              </span>
-            </div>
-
-            {/* Row 2: Kategori */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Kategori</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                {transaction.category?.name || "-"}
-                {transaction.subCategory && (
-                  <span className="text-[var(--text-secondary)] font-normal">
-                    {" · "}{transaction.subCategory.name}
+            {isTransfer ? (
+              <>
+                {/* Row 1: Deskripsi */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Deskripsi</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
+                    {transaction.description || "-"}
                   </span>
-                )}
-              </span>
-            </div>
+                </div>
 
-            {/* Row 3: Dompet */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Dompet</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                {transaction.wallet?.name || "-"}
-              </span>
-            </div>
+                {/* Row 2: Dompet */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Dompet</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {transaction.fromWallet?.name || "-"} → {transaction.toWallet?.name || "-"}
+                  </span>
+                </div>
 
-            {/* Row 4: Tanggal */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Tanggal</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                {formatDateLong(transaction.date)}
-              </span>
-            </div>
+                {/* Row 3: Tanggal */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Tanggal</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {formatDateLong(transaction.date)}
+                  </span>
+                </div>
 
-            {/* Row 5: Jam */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Jam</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                {formatTime(transaction.createdAt)}
-              </span>
-            </div>
+                {/* Row 4: Jam */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Jam</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {formatTime(transaction.createdAt)}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Row 1: Judul */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Judul</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
+                    {transaction.description || "-"}
+                  </span>
+                </div>
 
-            {/* Row 6: Catatan */}
-            <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
-              <span className="text-xs text-[var(--text-secondary)]">Catatan</span>
-              <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                {transaction.notes || "-"}
-              </span>
-            </div>
+                {/* Row 2: Kategori */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Kategori</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {transaction.category?.name || "-"}
+                    {transaction.subCategory && (
+                      <span className="text-[var(--text-secondary)] font-normal">
+                        {" · "}{transaction.subCategory.name}
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                {/* Row 3: Dompet */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Dompet</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {transaction.wallet?.name || "-"}
+                  </span>
+                </div>
+
+                {/* Row 4: Tanggal */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Tanggal</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {formatDateLong(transaction.date)}
+                  </span>
+                </div>
+
+                {/* Row 5: Jam */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Jam</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {formatTime(transaction.createdAt)}
+                  </span>
+                </div>
+
+                {/* Row 6: Catatan */}
+                <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--text-secondary)]">Catatan</span>
+                  <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
+                    {transaction.notes || "-"}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -193,16 +242,18 @@ const TransactionDetail = memo(function TransactionDetail({
                 <Trash2 className="h-4 w-4" />
                 Hapus
               </button>
-              <button
-                onClick={() => {
-                  onEdit(transaction);
-                  onClose();
-                }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-bold text-xs bg-[var(--bg-tertiary)] hover:bg-[var(--bg-tertiary)]/80 text-[var(--text-primary)] transition-colors border border-[var(--border-color)] cursor-pointer"
-              >
-                <Pencil className="h-4 w-4" />
-                Ubah
-              </button>
+              {!isTransfer && (
+                <button
+                  onClick={() => {
+                    onEdit(transaction);
+                    onClose();
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-bold text-xs bg-[var(--bg-tertiary)] hover:bg-[var(--bg-tertiary)]/80 text-[var(--text-primary)] transition-colors border border-[var(--border-color)] cursor-pointer"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Ubah
+                </button>
+              )}
             </div>
           )}
         </div>

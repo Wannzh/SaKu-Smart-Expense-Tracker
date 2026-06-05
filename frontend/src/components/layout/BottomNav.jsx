@@ -1,6 +1,7 @@
 import { memo, useState, useCallback } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTransaction } from "../../hooks/useTransaction";
+import { useTransfer } from "../../hooks/useTransfer";
 import TransactionForm from "../transaction/TransactionForm";
 import Modal from "../common/Modal";
 import {
@@ -22,14 +23,25 @@ const navItems = [
 
 const BottomNav = memo(function BottomNav() {
   const location = useLocation();
-  const { createTransaction, getTransactions } = useTransaction();
+  const { createTransaction } = useTransaction();
+  const { createTransfer } = useTransfer();
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
   const handleQuickAdd = useCallback(async (data) => {
-    await createTransaction(data);
+    if (data.type === "TRANSFER") {
+      await createTransfer({
+        fromWalletId: data.fromWalletId,
+        toWalletId: data.toWalletId,
+        amount: data.amount,
+        description: data.description,
+        date: data.date,
+      });
+    } else {
+      await createTransaction(data);
+    }
     setIsQuickAddOpen(false);
-    getTransactions();
-  }, [createTransaction, getTransactions]);
+    window.dispatchEvent(new CustomEvent("refresh-data"));
+  }, [createTransaction, createTransfer]);
 
   return (
     <>

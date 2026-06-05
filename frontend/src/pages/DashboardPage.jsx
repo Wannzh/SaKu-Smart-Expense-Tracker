@@ -8,6 +8,7 @@ import TransactionCard from "../components/transaction/TransactionCard";
 import TransactionDetail from "../components/transaction/TransactionDetail";
 import TransactionForm from "../components/transaction/TransactionForm";
 import Modal from "../components/common/Modal";
+import { useTransfer } from "../hooks/useTransfer";
 import { formatCurrency } from "../utils/format";
 import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import {
@@ -377,6 +378,7 @@ const DashboardPage = memo(function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { transactions, getTransactions, updateTransaction, deleteTransaction } = useTransaction();
+  const { transfers, getTransfers, deleteTransfer } = useTransfer();
   const { wallets, getWallets } = useWallet();
   const { resolvedTheme, cardStyle } = useTheme();
 
@@ -385,11 +387,29 @@ const DashboardPage = memo(function DashboardPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
 
+  const refreshData = useCallback(() => {
+    getTransactions();
+    getTransfers();
+    getWallets();
+  }, [getTransactions, getTransfers, getWallets]);
+
   // Fetch on mount
   useEffect(() => {
-    getTransactions();
-    getWallets();
-  }, [getTransactions, getWallets]);
+    refreshData();
+  }, [refreshData]);
+
+  // Listen to refresh-data event
+  useEffect(() => {
+    const handleRefresh = () => refreshData();
+    window.addEventListener("refresh-data", handleRefresh);
+    return () => window.removeEventListener("refresh-data", handleRefresh);
+  }, [refreshData]);
+
+  // Merge transactions and transfers
+  const allItems = useMemo(() => {
+    const mappedTransfers = transfers.map((t) => ({ ...t, type: "TRANSFER" }));
+    return [...transactions, ...mappedTransfers];
+  }, [transactions, transfers]);
 
   // Active gradient
   const activeGradient = useMemo(() => {
@@ -406,12 +426,13 @@ const DashboardPage = memo(function DashboardPage() {
   // Filter transactions by period
   const filteredTransactions = useMemo(() => {
     const now = dayjs();
-    if (activePeriod === "Hari") return transactions.filter((tx) => dayjs(tx.date).isSame(now, "day"));
-    if (activePeriod === "Minggu") return transactions.filter((tx) => dayjs(tx.date).isSame(now, "week"));
-    if (activePeriod === "Bulan") return transactions.filter((tx) => dayjs(tx.date).isSame(now, "month"));
-    if (activePeriod === "Tahun") return transactions.filter((tx) => dayjs(tx.date).isSame(now, "year"));
-    return transactions; // "Semua"
-  }, [transactions, activePeriod]);
+    const items = allItems;
+    if (activePeriod === "Hari") return items.filter((tx) => dayjs(tx.date).isSame(now, "day"));
+    if (activePeriod === "Minggu") return items.filter((tx) => dayjs(tx.date).isSame(now, "week"));
+    if (activePeriod === "Bulan") return items.filter((tx) => dayjs(tx.date).isSame(now, "month"));
+    if (activePeriod === "Tahun") return items.filter((tx) => dayjs(tx.date).isSame(now, "year"));
+    return items; // "Semua"
+  }, [allItems, activePeriod]);
 
   const { filteredIncome, filteredExpense } = useMemo(() => {
     const income = filteredTransactions
@@ -450,10 +471,13 @@ const DashboardPage = memo(function DashboardPage() {
   }, [editTarget, updateTransaction, getTransactions, getWallets]);
 
   const handleDelete = useCallback(async (id) => {
-    await deleteTransaction(id);
-    getTransactions();
-    getWallets();
-  }, [deleteTransaction, getTransactions, getWallets]);
+    if (selectedTransaction?.type === "TRANSFER") {
+      await deleteTransfer(id);
+    } else {
+      await deleteTransaction(id);
+    }
+    refreshData();
+  }, [selectedTransaction, deleteTransaction, deleteTransfer, refreshData]);
 
   const handleOpenDetail = useCallback((tx) => {
     setSelectedTransaction(tx);

@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useCallback, useMemo } from "react";
 import { useTransaction } from "../hooks/useTransaction";
+import { useTransfer } from "../hooks/useTransfer";
 import { useCategory } from "../hooks/useCategory";
 import TransactionCard from "../components/transaction/TransactionCard";
 import TransactionForm from "../components/transaction/TransactionForm";
@@ -15,11 +16,13 @@ import {
   Search,
 } from "lucide-react";
 import clsx from "clsx";
+import dayjs from "dayjs";
 
 const typeFilters = [
   { value: "", label: "Semua" },
   { value: "INCOME", label: "Pemasukan" },
   { value: "EXPENSE", label: "Pengeluaran" },
+  { value: "TRANSFER", label: "Transfer" },
 ];
 
 const TransactionsPage = memo(function TransactionsPage() {
@@ -31,6 +34,13 @@ const TransactionsPage = memo(function TransactionsPage() {
     updateTransaction,
     deleteTransaction,
   } = useTransaction();
+
+  const {
+    transfers,
+    getTransfers,
+    createTransfer,
+    deleteTransfer,
+  } = useTransfer();
 
   const { categories, getCategories } = useCategory();
 
@@ -61,9 +71,62 @@ const TransactionsPage = memo(function TransactionsPage() {
     return cf;
   }, [filters]);
 
+  const refreshAll = useCallback(() => {
+    const txFilters = { ...cleanFilters };
+    if (txFilters.type === "TRANSFER") {
+      delete txFilters.type;
+    }
+    getTransactions(txFilters);
+    getTransfers();
+  }, [cleanFilters, getTransactions, getTransfers]);
+
   useEffect(() => {
-    getTransactions(cleanFilters);
-  }, [cleanFilters, getTransactions]);
+    refreshAll();
+  }, [refreshAll]);
+
+  // Listen to refresh-data event
+  useEffect(() => {
+    const handleRefresh = () => refreshAll();
+    window.addEventListener("refresh-data", handleRefresh);
+    return () => window.removeEventListener("refresh-data", handleRefresh);
+  }, [refreshAll]);
+
+  // Merge, filter and sort transactions & transfers on client-side
+  const filteredMergedItems = useMemo(() => {
+    let items = [];
+
+    // 1. Filter type
+    if (filters.type === "TRANSFER") {
+      items = transfers.map(t => ({ ...t, type: "TRANSFER" }));
+    } else if (filters.type === "INCOME" || filters.type === "EXPENSE") {
+      items = transactions.filter(t => t.type === filters.type);
+    } else {
+      const mappedTransfers = transfers.map(t => ({ ...t, type: "TRANSFER" }));
+      items = [...transactions, ...mappedTransfers];
+    }
+
+    // 2. Filter categoryId
+    if (filters.categoryId) {
+      items = items.filter(t => t.type !== "TRANSFER" && t.categoryId === filters.categoryId);
+    }
+
+    // 3. Filter dateFrom / dateTo
+    if (filters.dateFrom) {
+      const fromDate = dayjs(filters.dateFrom).startOf("day");
+      items = items.filter(t => dayjs(t.date).isAfter(fromDate) || dayjs(t.date).isSame(fromDate, "day"));
+    }
+    if (filters.dateTo) {
+      const toDate = dayjs(filters.dateTo).endOf("day");
+      items = items.filter(t => dayjs(t.date).isBefore(toDate) || dayjs(t.date).isSame(toDate, "day"));
+    }
+
+    // 4. Sort
+    return items.sort((a, b) => {
+      const diff = new Date(b.date) - new Date(a.date);
+      if (diff !== 0) return diff;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
+  }, [transactions, transfers, filters]);
 
   const handleFilterChange = useCallback((key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -77,32 +140,50 @@ const TransactionsPage = memo(function TransactionsPage() {
     filters.type || filters.categoryId || filters.dateFrom || filters.dateTo;
 
   const handleCreate = async (data) => {
-    await createTransaction(data);
+    if (data.type === "TRANSFER") {
+      await createTransfer({
+        fromWalletId: data.fromWalletId,
+        toWalletId: data.toWalletId,
+        amount: data.amount,
+        description: data.description,
+        date: data.date,
+      });
+    } else {
+      await createTransaction(data);
+    }
     setIsCreateOpen(false);
-    getTransactions(cleanFilters);
+    refreshAll();
   };
 
   const handleEdit = async (data) => {
     await updateTransaction(editTarget.id, data);
     setEditTarget(null);
-    getTransactions(cleanFilters);
+    refreshAll();
   };
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteTransaction(deleteTarget.id);
+      if (deleteTarget.type === "TRANSFER") {
+        await deleteTransfer(deleteTarget.id);
+      } else {
+        await deleteTransaction(deleteTarget.id);
+      }
       setDeleteTarget(null);
-      getTransactions(cleanFilters);
+      refreshAll();
     } finally {
       setIsDeleting(false);
     }
   };
 
   const handleDetailDelete = useCallback(async (id) => {
-    await deleteTransaction(id);
-    getTransactions(cleanFilters);
-  }, [deleteTransaction, cleanFilters, getTransactions]);
+    if (selectedTransaction?.type === "TRANSFER") {
+      await deleteTransfer(id);
+    } else {
+      await deleteTransaction(id);
+    }
+    refreshAll();
+  }, [selectedTransaction, deleteTransaction, deleteTransfer, refreshAll]);
 
   const handleOpenDetail = useCallback((tx) => {
     setSelectedTransaction(tx);
@@ -194,21 +275,21 @@ const TransactionsPage = memo(function TransactionsPage() {
       </div>
 
       {/* Count */}
-      {transactions.length > 0 && (
+      {filteredMergedItems.length > 0 && (
         <p className="text-xs text-[var(--text-tertiary)] mb-3 flex items-center gap-1.5">
           <Search className="h-3.5 w-3.5" />
-          Menampilkan {transactions.length} transaksi
+          Menampilkan {filteredMergedItems.length} transaksi
         </p>
       )}
 
       {/* Transaction List */}
-      {isLoading && transactions.length === 0 ? (
+      {isLoading && filteredMergedItems.length === 0 ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
         </div>
-      ) : transactions.length > 0 ? (
+      ) : filteredMergedItems.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {transactions.map((tx) => (
+          {filteredMergedItems.map((tx) => (
             <TransactionCard
               key={tx.id}
               transaction={tx}
