@@ -33,6 +33,7 @@ const getTransactions = async (userId, { type, categoryId, walletId, dateFrom, d
     where,
     include: {
       category: true,
+      subCategory: true,
       wallet: true,
     },
     orderBy: { date: "desc" },
@@ -71,10 +72,10 @@ const getSummary = async (userId) => {
  * Jika walletId ada → update balance wallet (atomic)
  *
  * @param {string} userId
- * @param {{ amount: number, type: string, description?: string, date: string, categoryId?: string, walletId?: string }} data
+ * @param {{ amount: number, type: string, description?: string, date: string, categoryId?: string, subCategoryId?: string, walletId?: string }} data
  * @returns {Promise<object>}
  */
-const createTransaction = async (userId, { amount, type, description, date, categoryId, walletId }) => {
+const createTransaction = async (userId, { amount, type, description, date, categoryId, subCategoryId, walletId }) => {
   if (!amount || amount <= 0) {
     throw createError(400, "Amount harus lebih besar dari 0");
   }
@@ -95,10 +96,12 @@ const createTransaction = async (userId, { amount, type, description, date, cate
         date: new Date(date),
         userId,
         categoryId: categoryId || null,
+        subCategoryId: subCategoryId || null,
         walletId: walletId || null,
       },
       include: {
         category: true,
+        subCategory: true,
         wallet: true,
       },
     });
@@ -130,6 +133,7 @@ const getTransactionById = async (userId, transactionId) => {
     where: { id: transactionId },
     include: {
       category: true,
+      subCategory: true,
       receipt: true,
       wallet: true,
     },
@@ -152,10 +156,10 @@ const getTransactionById = async (userId, transactionId) => {
  *
  * @param {string} userId
  * @param {string} transactionId
- * @param {{ amount?: number, type?: string, description?: string, date?: string, categoryId?: string, walletId?: string }} data
+ * @param {{ amount?: number, type?: string, description?: string, date?: string, categoryId?: string, subCategoryId?: string, walletId?: string }} data
  * @returns {Promise<object>}
  */
-const updateTransaction = async (userId, transactionId, { amount, type, description, date, categoryId, walletId }) => {
+const updateTransaction = async (userId, transactionId, { amount, type, description, date, categoryId, subCategoryId, walletId }) => {
   // Cek kepemilikan
   const existing = await getTransactionById(userId, transactionId);
 
@@ -189,6 +193,7 @@ const updateTransaction = async (userId, transactionId, { amount, type, descript
     if (description !== undefined) updateData.description = description;
     if (date !== undefined) updateData.date = new Date(date);
     if (categoryId !== undefined) updateData.categoryId = categoryId || null;
+    if (subCategoryId !== undefined) updateData.subCategoryId = subCategoryId || null;
     if (walletId !== undefined) updateData.walletId = walletId || null;
 
     const updated = await tx.transaction.update({
@@ -196,6 +201,7 @@ const updateTransaction = async (userId, transactionId, { amount, type, descript
       data: updateData,
       include: {
         category: true,
+        subCategory: true,
         wallet: true,
       },
     });

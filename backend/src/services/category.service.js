@@ -2,111 +2,56 @@ const prisma = require("../config/prisma");
 const { createError } = require("../utils/response");
 
 /**
- * Ambil semua kategori: default (isDefault=true) + milik user
+ * Ambil semua kategori: default (isDefault=true)
  *
- * @param {string} userId
+ * @param {string} [type] - Optional: filter by "INCOME" | "EXPENSE"
  * @returns {Promise<object[]>}
  */
-const getCategories = async (userId) => {
+const getCategories = async (type) => {
+  const where = {
+    isDefault: true,
+  };
+
+  if (type) {
+    where.type = type;
+  }
+
   const categories = await prisma.category.findMany({
-    where: {
-      OR: [
-        { isDefault: true },
-        { userId },
-      ],
+    where,
+    include: {
+      subCategories: {
+        orderBy: {
+          name: "asc",
+        },
+      },
     },
-    orderBy: [
-      { isDefault: "desc" },
-      { name: "asc" },
-    ],
+    orderBy: {
+      name: "asc",
+    },
   });
 
   return categories;
 };
 
 /**
- * Buat kategori custom milik user
- *
- * @param {string} userId
- * @param {{ name: string, icon?: string, color?: string }} data
- * @returns {Promise<object>}
+ * Buat kategori custom milik user (DEPRECATED)
  */
 const createCategory = async (userId, { name, icon, color }) => {
-  const category = await prisma.category.create({
-    data: {
-      name,
-      icon,
-      color,
-      isDefault: false,
-      userId,
-    },
-  });
-
-  return category;
+  throw createError(403, "Pembuatan kategori custom tidak didukung");
 };
 
 /**
- * Update kategori — hanya jika milik user (bukan default)
- *
- * @param {string} userId
- * @param {string} categoryId
- * @param {{ name?: string, icon?: string, color?: string }} data
- * @returns {Promise<object>}
+ * Update kategori (DEPRECATED)
  */
 const updateCategory = async (userId, categoryId, { name, icon, color }) => {
-  const category = await prisma.category.findUnique({
-    where: { id: categoryId },
-  });
-
-  if (!category) {
-    throw createError(404, "Kategori tidak ditemukan");
-  }
-
-  if (category.isDefault) {
-    throw createError(403, "Kategori default tidak bisa diedit");
-  }
-
-  if (category.userId !== userId) {
-    throw createError(403, "Anda tidak memiliki akses ke kategori ini");
-  }
-
-  const updated = await prisma.category.update({
-    where: { id: categoryId },
-    data: { name, icon, color },
-  });
-
-  return updated;
+  throw createError(403, "Kategori default tidak bisa diubah");
 };
 
 /**
- * Hapus kategori — hanya jika milik user (bukan default)
- *
- * @param {string} userId
- * @param {string} categoryId
- * @returns {Promise<object>}
+ * Hapus kategori (DEPRECATED)
  */
 const deleteCategory = async (userId, categoryId) => {
-  const category = await prisma.category.findUnique({
-    where: { id: categoryId },
-  });
-
-  if (!category) {
-    throw createError(404, "Kategori tidak ditemukan");
-  }
-
-  if (category.isDefault) {
-    throw createError(403, "Kategori default tidak bisa dihapus");
-  }
-
-  if (category.userId !== userId) {
-    throw createError(403, "Anda tidak memiliki akses ke kategori ini");
-  }
-
-  await prisma.category.delete({
-    where: { id: categoryId },
-  });
-
-  return category;
+  throw createError(403, "Kategori default tidak bisa dihapus");
 };
 
 module.exports = { getCategories, createCategory, updateCategory, deleteCategory };

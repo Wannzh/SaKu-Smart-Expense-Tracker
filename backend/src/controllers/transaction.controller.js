@@ -30,7 +30,7 @@ const getSummary = async (req, res, next) => {
  * POST /api/transactions
  */
 const createTransaction = async (req, res, next) => {
-  const { amount, type, description, date, categoryId, walletId } = req.body;
+  const { amount, type, description, date, categoryId, subCategoryId, walletId } = req.body;
 
   const transaction = await transactionService.createTransaction(req.user.id, {
     amount,
@@ -38,6 +38,7 @@ const createTransaction = async (req, res, next) => {
     description,
     date,
     categoryId,
+    subCategoryId,
     walletId,
   });
 
@@ -56,7 +57,7 @@ const getTransactionById = async (req, res, next) => {
  * PUT /api/transactions/:id
  */
 const updateTransaction = async (req, res, next) => {
-  const { amount, type, description, date, categoryId, walletId } = req.body;
+  const { amount, type, description, date, categoryId, subCategoryId, walletId } = req.body;
 
   const transaction = await transactionService.updateTransaction(req.user.id, req.params.id, {
     amount,
@@ -64,6 +65,7 @@ const updateTransaction = async (req, res, next) => {
     description,
     date,
     categoryId,
+    subCategoryId,
     walletId,
   });
 

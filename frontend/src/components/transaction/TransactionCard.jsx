@@ -1,6 +1,7 @@
 import { memo } from "react";
 import { formatCurrency, formatDate } from "../../utils/format";
-import { Pencil, Trash2, TrendingUp, TrendingDown } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import clsx from "clsx";
 
 const TransactionCard = memo(function TransactionCard({
@@ -11,6 +12,13 @@ const TransactionCard = memo(function TransactionCard({
 }) {
   const isIncome = transaction.type === "INCOME";
 
+  const IconComponent = LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
+  const catColor = transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
+
+  const subName = transaction.subCategory?.name;
+  const desc = transaction.description;
+  const subtitle = subName && desc ? `${subName} · ${desc}` : (subName || desc || formatDate(transaction.date));
+
   return (
     <div
       className={clsx(
@@ -20,21 +28,11 @@ const TransactionCard = memo(function TransactionCard({
       )}
     >
       {/* Category icon */}
-      <div
-        className={clsx(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-lg",
-          isIncome
-            ? "bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-900/30 dark:to-emerald-800/20"
-            : "bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-900/30 dark:to-red-800/20"
-        )}
+      <div 
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        style={{ backgroundColor: `${catColor}20` }}
       >
-        {transaction.category?.icon ? (
-          <span className="text-lg">{transaction.category.icon}</span>
-        ) : isIncome ? (
-          <TrendingUp className="h-5 w-5 text-emerald-500" />
-        ) : (
-          <TrendingDown className="h-5 w-5 text-red-500" />
-        )}
+        <IconComponent className="h-5 w-5" style={{ color: catColor }} />
       </div>
 
       {/* Info */}
@@ -42,8 +40,8 @@ const TransactionCard = memo(function TransactionCard({
         <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
           {transaction.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
         </p>
-        <p className="truncate text-xs text-[var(--text-tertiary)] mt-0.5">
-          {transaction.description || formatDate(transaction.date)}
+        <p className="truncate text-xs text-[var(--text-tertiary)] mt-0.5" title={subtitle}>
+          {subtitle}
         </p>
       </div>
 

@@ -1,11 +1,9 @@
 const categoryService = require("../services/category.service");
 const { sendSuccess } = require("../utils/response");
 
-/**
- * GET /api/categories
- */
 const getCategories = async (req, res, next) => {
-  const categories = await categoryService.getCategories(req.user.id);
+  const { type } = req.query;
+  const categories = await categoryService.getCategories(type);
   sendSuccess(res, 200, "Daftar kategori berhasil diambil", { categories });
 };
 
