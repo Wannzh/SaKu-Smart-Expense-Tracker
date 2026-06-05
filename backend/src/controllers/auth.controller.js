@@ -41,4 +41,15 @@ const getMe = async (req, res, next) => {
   sendSuccess(res, 200, "Data user berhasil diambil", { user: req.user });
 };
 
-module.exports = { register, login, logout, getMe };
+/**
+ * PUT /api/auth/profile (protected)
+ */
+const updateProfile = async (req, res, next) => {
+  const { name } = req.body;
+  const userId = req.user.id;
+
+  const user = await authService.updateProfile(userId, { name });
+  sendSuccess(res, 200, "Profil berhasil diperbarui", { user });
+};
+
+module.exports = { register, login, logout, getMe, updateProfile };

@@ -16,4 +16,7 @@ router.post("/logout", authController.logout);
 // GET /api/auth/me (protected)
 router.get("/me", authMiddleware, authController.getMe);
 
+// PUT /api/auth/profile (protected)
+router.put("/profile", authMiddleware, authController.updateProfile);
+
 module.exports = router;

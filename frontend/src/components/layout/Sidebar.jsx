@@ -11,6 +11,7 @@ import {
   Wallet,
   CreditCard,
   BarChart2,
+  UserCircle,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -51,7 +52,7 @@ const Sidebar = memo(function Sidebar() {
       <div className="mx-4 h-px bg-[var(--border-color)]" />
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4">
+      <nav className="flex-1 px-3 py-4 flex flex-col justify-between">
         <ul className="flex flex-col gap-1">
           {navItems.map(({ to, icon: Icon, label }) => (
             <li key={to}>
@@ -73,6 +74,25 @@ const Sidebar = memo(function Sidebar() {
             </li>
           ))}
         </ul>
+
+        <div>
+          {/* Divider */}
+          <div className="my-2 h-px bg-[var(--border-color)] mx-1" />
+          <NavLink
+            to="/profile"
+            className={({ isActive }) =>
+              clsx(
+                "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                isActive
+                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/40"
+                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-indigo-600"
+              )
+            }
+          >
+            <UserCircle className="h-5 w-5 shrink-0" />
+            Profil & Pengaturan
+          </NavLink>
+        </div>
       </nav>
 
       {/* Divider */}

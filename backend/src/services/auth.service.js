@@ -82,4 +82,25 @@ const login = async ({ email, password }) => {
   return { user: userWithoutPassword, token };
 };
 
-module.exports = { register, login };
+/**
+ * Update profile user
+ *
+ * @param {string} userId
+ * @param {{ name: string }} data
+ * @returns {Promise<object>}
+ */
+const updateProfile = async (userId, { name }) => {
+  if (!name || !name.trim()) {
+    throw createError(400, "Nama harus diisi");
+  }
+
+  const updatedUser = await prisma.user.update({
+    where: { id: userId },
+    data: { name: name.trim() },
+    select: userSelect,
+  });
+
+  return updatedUser;
+};
+
+module.exports = { register, login, updateProfile };

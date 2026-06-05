@@ -15,6 +15,10 @@ const ScanPage = lazy(() => import("../pages/ScanPage"));
 const ChatPage = lazy(() => import("../pages/ChatPage"));
 const WalletPage = lazy(() => import("../pages/WalletPage"));
 const StatisticsPage = lazy(() => import("../pages/StatisticsPage"));
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const AboutPage = lazy(() => import("../pages/AboutPage"));
+const FeedbackPage = lazy(() => import("../pages/FeedbackPage"));
+const BugReportPage = lazy(() => import("../pages/BugReportPage"));
 
 /**
  * Fallback loading untuk Suspense
@@ -133,15 +137,31 @@ export default function AppRouter() {
             path="/profile"
             element={
               <ProtectedPage>
-                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
-                    <UserCircle className="h-8 w-8" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-[var(--text-primary)]">Profil Pengguna</h2>
-                    <p className="text-sm text-[var(--text-tertiary)] mt-1">Halaman profil akan segera hadir! 🚀</p>
-                  </div>
-                </div>
+                <ProfilePage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <ProtectedPage>
+                <AboutPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedPage>
+                <FeedbackPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/bug-report"
+            element={
+              <ProtectedPage>
+                <BugReportPage />
               </ProtectedPage>
             }
           />
