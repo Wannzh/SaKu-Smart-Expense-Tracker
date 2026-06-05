@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import AppLayout from "../components/layout/AppLayout";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserCircle } from "lucide-react";
 
 // ─── Lazy-loaded Pages ────────────────────────────────────────
 const LoginPage = lazy(() => import("../pages/LoginPage"));
@@ -14,6 +14,7 @@ const TransactionsPage = lazy(() => import("../pages/TransactionsPage"));
 const ScanPage = lazy(() => import("../pages/ScanPage"));
 const ChatPage = lazy(() => import("../pages/ChatPage"));
 const WalletPage = lazy(() => import("../pages/WalletPage"));
+const StatisticsPage = lazy(() => import("../pages/StatisticsPage"));
 
 /**
  * Fallback loading untuk Suspense
@@ -117,6 +118,30 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <ChatPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedPage>
+                <StatisticsPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedPage>
+                <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600">
+                    <UserCircle className="h-8 w-8" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[var(--text-primary)]">Profil Pengguna</h2>
+                    <p className="text-sm text-[var(--text-tertiary)] mt-1">Halaman profil akan segera hadir! 🚀</p>
+                  </div>
+                </div>
               </ProtectedPage>
             }
           />

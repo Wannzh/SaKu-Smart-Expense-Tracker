@@ -8,17 +8,17 @@ import {
   LayoutDashboard,
   CreditCard,
   Plus,
-  ArrowLeftRight,
-  MessageSquare,
+  BarChart2,
+  UserCircle,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Beranda" },
-  { to: "/wallets", icon: CreditCard, label: "Wallet" },
+  { to: "/statistics", icon: BarChart2, label: "Statistik" },
   null, // center placeholder
-  { to: "/transactions", icon: ArrowLeftRight, label: "Transaksi" },
-  { to: "/chat", icon: MessageSquare, label: "Chat AI" },
+  { to: "/wallets", icon: CreditCard, label: "Dompet" },
+  { to: "/profile", icon: UserCircle, label: "Profil" },
 ];
 
 const BottomNav = memo(function BottomNav() {

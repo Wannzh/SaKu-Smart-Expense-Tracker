@@ -10,11 +10,13 @@ import {
   LogOut,
   Wallet,
   CreditCard,
+  BarChart2,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/statistics", icon: BarChart2, label: "Statistik" },
   { to: "/wallets", icon: CreditCard, label: "Wallet" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Transaksi" },
   { to: "/scan", icon: ScanLine, label: "Scan Struk" },
