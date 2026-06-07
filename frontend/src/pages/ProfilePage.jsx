@@ -134,7 +134,7 @@ const ProfilePage = memo(function ProfilePage() {
         </p>
         <div className="bg-[var(--card-bg)] rounded-2xl overflow-hidden border border-[var(--border-color)]">
           <div
-            onClick={() => toast("Segera hadir! 🚀")}
+            onClick={() => navigate("/export")}
             className="flex items-center gap-3 px-4 py-4 border-b border-[var(--border-color)] last:border-0 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors active:scale-[0.99]"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-tertiary)] shrink-0 text-indigo-500">
@@ -160,7 +160,7 @@ const ProfilePage = memo(function ProfilePage() {
           </div>
 
           <div
-            onClick={() => toast("Segera hadir! 🚀")}
+            onClick={() => navigate("/categories")}
             className="flex items-center gap-3 px-4 py-4 border-b border-[var(--border-color)] last:border-0 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-colors active:scale-[0.99]"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--bg-tertiary)] shrink-0 text-amber-500">

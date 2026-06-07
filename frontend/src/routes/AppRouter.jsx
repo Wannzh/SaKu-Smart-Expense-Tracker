@@ -16,6 +16,8 @@ const ChatPage = lazy(() => import("../pages/ChatPage"));
 const WalletPage = lazy(() => import("../pages/WalletPage"));
 const StatisticsPage = lazy(() => import("../pages/StatisticsPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const ExportPage = lazy(() => import("../pages/ExportPage"));
+const CategoryListPage = lazy(() => import("../pages/CategoryListPage"));
 const AboutPage = lazy(() => import("../pages/AboutPage"));
 const FeedbackPage = lazy(() => import("../pages/FeedbackPage"));
 const BugReportPage = lazy(() => import("../pages/BugReportPage"));
@@ -138,6 +140,22 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <ProfilePage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/export"
+            element={
+              <ProtectedPage>
+                <ExportPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/categories"
+            element={
+              <ProtectedPage>
+                <CategoryListPage />
               </ProtectedPage>
             }
           />
