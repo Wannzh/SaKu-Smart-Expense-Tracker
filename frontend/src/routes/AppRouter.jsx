@@ -21,6 +21,7 @@ const CategoryListPage = lazy(() => import("../pages/CategoryListPage"));
 const AboutPage = lazy(() => import("../pages/AboutPage"));
 const FeedbackPage = lazy(() => import("../pages/FeedbackPage"));
 const BugReportPage = lazy(() => import("../pages/BugReportPage"));
+const BudgetPage = lazy(() => import("../pages/BudgetPage"));
 
 /**
  * Fallback loading untuk Suspense
@@ -180,6 +181,14 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <BugReportPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/budget"
+            element={
+              <ProtectedPage>
+                <BudgetPage />
               </ProtectedPage>
             }
           />

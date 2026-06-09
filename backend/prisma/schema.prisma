@@ -37,6 +37,7 @@ model User {
   chatSessions ChatSession[]
   wallets      Wallet[]
   transfers    Transfer[]
+  budgets      Budget[]
 }
 
 model Category {
@@ -51,6 +52,7 @@ model Category {
 
   subCategories SubCategory[]
   transactions  Transaction[]
+  budgets       Budget[]
 }
 
 model Wallet {
@@ -164,4 +166,21 @@ model Transfer {
   toWallet      Wallet   @relation("TransferTo", fields: [toWalletId], references: [id], onDelete: Cascade)
 
   @@map("transfers")
+}
+
+model Budget {
+  id         String   @id @default(cuid())
+  amount     Decimal  @db.Decimal(14, 2)
+  month      Int      // 1-12
+  year       Int      // e.g. 2026
+  userId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId, month, year])
+  @@map("budgets")
 }

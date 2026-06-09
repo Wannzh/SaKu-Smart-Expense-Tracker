@@ -10,6 +10,8 @@ import TransactionForm from "../components/transaction/TransactionForm";
 import Modal from "../components/common/Modal";
 import { useTransfer } from "../hooks/useTransfer";
 import { formatCurrency } from "../utils/format";
+import { useBudget } from "../hooks/useBudget";
+import * as LucideIcons from "lucide-react";
 import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import {
   ArrowDownLeft,
@@ -44,7 +46,7 @@ const PERIODS = ["Hari", "Minggu", "Bulan", "Tahun", "Semua"];
 
 // ─── Menu items (Section 2) ─────────────────────────────────
 const menuItems = [
-  { label: "Anggaran",   icon: PieChart,       color: "#F97316", available: false },
+  { label: "Anggaran",   icon: PieChart,       color: "#F97316", available: true, path: "/budget" },
   { label: "Berulang",   icon: RefreshCw,      color: "#3B82F6", available: false },
   { label: "Target",     icon: Target,         color: "#10B981", available: false },
   { label: "Tagihan",    icon: FileText,       color: "#EF4444", available: false },
@@ -171,29 +173,101 @@ const MenuGrid = memo(function MenuGrid({ onNavigate }) {
 });
 
 // ═══════════════════════════════════════════════════════════════
-// SECTION 3 — ANGGARAN BULANAN (Placeholder)
+// SECTION 3 — ANGGARAN BULANAN
 // ═══════════════════════════════════════════════════════════════
-const BudgetCard = memo(function BudgetCard() {
+const BudgetCard = memo(function BudgetCard({ onNavigate }) {
+  const { budgets, getBudgets } = useBudget();
+
+  useEffect(() => {
+    const now = dayjs();
+    getBudgets(now.month() + 1, now.year());
+  }, [getBudgets]);
+
   const handleClick = useCallback(() => {
-    toast.success("Fitur anggaran segera hadir! 🚀");
-  }, []);
+    onNavigate("/budget");
+  }, [onNavigate]);
+
+  const topBudgets = useMemo(() => {
+    return [...budgets]
+      .sort((a, b) => b.percentage - a.percentage)
+      .slice(0, 3);
+  }, [budgets]);
+
+  if (budgets.length === 0) {
+    return (
+      <button
+        onClick={handleClick}
+        className="w-full flex items-center gap-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 text-left transition-all hover:shadow-md cursor-pointer group"
+      >
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
+          <PieChart className="h-5 w-5 text-orange-500" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-[var(--text-primary)]">Anggaran Bulanan</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
+            Belum ada anggaran. Ketuk untuk membuat!
+          </p>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors" />
+      </button>
+    );
+  }
 
   return (
-    <button
+    <div
       onClick={handleClick}
-      className="w-full flex items-center gap-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 text-left transition-all hover:shadow-md cursor-pointer group"
+      className="w-full rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 text-left transition-all hover:shadow-md cursor-pointer group flex flex-col gap-3"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
-        <PieChart className="h-5 w-5 text-orange-500" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 dark:bg-orange-900/20">
+            <PieChart className="h-5 w-5 text-orange-500" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Anggaran Bulanan</p>
+            <p className="text-[10px] text-[var(--text-tertiary)] mt-0.5">
+              Klik untuk detail anggaran
+            </p>
+          </div>
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors" />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-[var(--text-primary)]">Anggaran Bulanan</p>
-        <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-          Belum ada anggaran. Ketuk untuk membuat!
-        </p>
+
+      <div className="space-y-2.5 pt-1">
+        {topBudgets.map((budget) => {
+          const Icon = LucideIcons[budget.category.icon] || LucideIcons.Tag;
+          const isOver = budget.percentage > 100;
+          return (
+            <div key={budget.id} className="space-y-1">
+              <div className="flex items-center justify-between text-xs select-none">
+                <div className="flex items-center gap-1.5 font-medium text-[var(--text-secondary)]">
+                  <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: budget.category.color }} />
+                  <span>{budget.category.name}</span>
+                </div>
+                <span className={clsx("font-bold", isOver ? "text-red-500" : "text-[var(--text-primary)]")}>
+                  {budget.percentage}%
+                </span>
+              </div>
+              <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={clsx(
+                    "h-1.5 rounded-full transition-all duration-500",
+                    budget.percentage < 50
+                      ? "bg-emerald-500"
+                      : budget.percentage <= 80
+                      ? "bg-amber-500"
+                      : budget.percentage <= 100
+                      ? "bg-orange-500"
+                      : "bg-red-500"
+                  )}
+                  style={{ width: `${Math.min(100, budget.percentage)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors" />
-    </button>
+    </div>
   );
 });
 
@@ -513,7 +587,7 @@ const DashboardPage = memo(function DashboardPage() {
       <MenuGrid onNavigate={handleNavigate} />
 
       {/* ── SECTION 3: Anggaran Bulanan ────────────────────── */}
-      <BudgetCard />
+      <BudgetCard onNavigate={handleNavigate} />
 
       {/* ── SECTION 4: Rekam Cepat ─────────────────────────── */}
       <QuickRecord onNavigate={handleNavigate} />
