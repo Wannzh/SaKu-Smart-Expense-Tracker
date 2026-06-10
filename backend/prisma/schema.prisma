@@ -38,6 +38,8 @@ model User {
   wallets      Wallet[]
   transfers    Transfer[]
   budgets      Budget[]
+  debts        Debt[]
+  wishlists    Wishlist[]
 }
 
 model Category {
@@ -73,6 +75,7 @@ model Wallet {
   transactions Transaction[]
   transfersFrom Transfer[] @relation("TransferFrom")
   transfersTo   Transfer[] @relation("TransferTo")
+  debts         Debt[]
 
   @@map("wallets")
 }
@@ -183,4 +186,70 @@ model Budget {
 
   @@unique([userId, categoryId, month, year])
   @@map("budgets")
+}
+
+model Debt {
+  id          String     @id @default(cuid())
+  type        DebtType   // DEBT (saya berhutang) | LOAN (saya meminjamkan)
+  status      DebtStatus @default(ACTIVE)
+  personName  String     // nama orang
+  amount      Decimal    @db.Decimal(14, 2)
+  paidAmount  Decimal    @default(0) @db.Decimal(14, 2)
+  notes       String?
+  borrowDate  DateTime   // tanggal pinjam
+  dueDate     DateTime?  // tanggal jatuh tempo (opsional)
+  paidDate    DateTime?  // tanggal lunas
+  walletId    String?
+  userId      String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)
+
+  @@map("debts")
+}
+
+enum DebtType {
+  DEBT   // saya berhutang ke orang lain
+  LOAN   // saya meminjamkan ke orang lain
+}
+
+enum DebtStatus {
+  ACTIVE    // masih berjalan
+  PAID      // lunas
+  OVERDUE   // jatuh tempo belum lunas
+}
+
+enum WishlistStatus {
+  ACTIVE
+  ACHIEVED
+  CANCELLED
+}
+
+enum WishlistPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Wishlist {
+  id          String           @id @default(cuid())
+  userId      String
+  name        String
+  targetPrice Decimal          @db.Decimal(14, 2)
+  savedAmount Decimal          @default(0) @db.Decimal(14, 2)
+  priority    WishlistPriority @default(MEDIUM)
+  status      WishlistStatus   @default(ACTIVE)
+  imageUrl    String?
+  productLink String?
+  notes       String?
+  targetDate  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("wishlists")
 }

@@ -22,6 +22,7 @@ const AboutPage = lazy(() => import("../pages/AboutPage"));
 const FeedbackPage = lazy(() => import("../pages/FeedbackPage"));
 const BugReportPage = lazy(() => import("../pages/BugReportPage"));
 const BudgetPage = lazy(() => import("../pages/BudgetPage"));
+const DebtPage = lazy(() => import("../pages/DebtPage"));
 
 /**
  * Fallback loading untuk Suspense
@@ -189,6 +190,14 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <BudgetPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/debts"
+            element={
+              <ProtectedPage>
+                <DebtPage />
               </ProtectedPage>
             }
           />

@@ -10,6 +10,7 @@ const chatRoutes = require("./chat.route");
 const walletRoutes = require("./wallet.route");
 const transferRoutes = require("./transfer.route");
 const budgetRoutes = require("./budget.route");
+const debtRoutes = require("./debt.route");
 
 router.use("/auth", authRoutes);
 router.use("/transactions", transactionRoutes);
@@ -19,5 +20,6 @@ router.use("/chat", chatRoutes);
 router.use("/wallets", walletRoutes);
 router.use("/transfers", transferRoutes);
 router.use("/budgets", budgetRoutes);
+router.use("/debts", debtRoutes);
 
 module.exports = router;

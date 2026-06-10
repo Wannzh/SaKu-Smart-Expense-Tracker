@@ -11,7 +11,8 @@ const AppLayout = memo(function AppLayout({ children }) {
     "/categories",
     "/about",
     "/bug-report",
-    "/feedback"
+    "/feedback",
+    "/debts"
   ].includes(location.pathname);
 
   return (
