@@ -278,10 +278,18 @@ const StatisticsPage = memo(function StatisticsPage() {
 
     const groups = {};
     matchedTransactions.forEach((t) => {
-      const catId = t.categoryId || "uncategorized";
-      const catName = t.category?.name || (activeType === "INCOME" ? "Pemasukan Lain" : "Pengeluaran Lain");
-      const catColor = t.category?.color || (activeType === "INCOME" ? "#10B981" : "#EF4444");
-      const catIcon = t.category?.icon || "Tag";
+      const isWishlist = t.description?.startsWith("Tabungan Keinginan:") || t.description?.startsWith("Tabungan Awal Keinginan:") || t.categoryId === "cat-wishlist";
+      
+      const catId = isWishlist ? "wishlist-savings" : (t.categoryId || "uncategorized");
+      const catName = isWishlist 
+        ? "Transaksi Keinginan" 
+        : t.category?.name || (activeType === "INCOME" ? "Pemasukan Lain" : "Pengeluaran Lain");
+      const catColor = isWishlist 
+        ? "#6366F1" 
+        : t.category?.color || (activeType === "INCOME" ? "#10B981" : "#EF4444");
+      const catIcon = isWishlist 
+        ? "Gift" 
+        : t.category?.icon || "Tag";
 
       if (!groups[catId]) {
         groups[catId] = {

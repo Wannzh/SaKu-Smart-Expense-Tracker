@@ -40,6 +40,7 @@ model User {
   budgets      Budget[]
   debts        Debt[]
   wishlists    Wishlist[]
+  recurrings   Recurring[]
 }
 
 model Category {
@@ -55,6 +56,7 @@ model Category {
   subCategories SubCategory[]
   transactions  Transaction[]
   budgets       Budget[]
+  recurrings    Recurring[]
 }
 
 model Wallet {
@@ -76,6 +78,7 @@ model Wallet {
   transfersFrom Transfer[] @relation("TransferFrom")
   transfersTo   Transfer[] @relation("TransferTo")
   debts         Debt[]
+  recurrings    Recurring[]
 
   @@map("wallets")
 }
@@ -252,4 +255,43 @@ model Wishlist {
 
   @@index([userId])
   @@map("wishlists")
+}
+
+enum RecurringFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum RecurringStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Recurring {
+  id          String              @id @default(cuid())
+  userId      String
+  title       String
+  amount      Decimal             @db.Decimal(14, 2)
+  type        TransactionType     // INCOME | EXPENSE
+  frequency   RecurringFrequency  @default(MONTHLY)
+  startDate   DateTime
+  endDate     DateTime?
+  nextRunDate DateTime
+  iconUrl     String?
+  walletId    String?
+  categoryId  String?
+  status      RecurringStatus     @default(ACTIVE)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  wallet   Wallet?   @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([nextRunDate])
+  @@map("recurrings")
 }

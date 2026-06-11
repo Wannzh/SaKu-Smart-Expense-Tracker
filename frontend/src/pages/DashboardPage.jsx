@@ -47,13 +47,13 @@ const PERIODS = ["Hari", "Minggu", "Bulan", "Tahun", "Semua"];
 // ─── Menu items (Section 2) ─────────────────────────────────
 const menuItems = [
   { label: "Anggaran",   icon: PieChart,       color: "#F97316", available: true, path: "/budget" },
-  { label: "Berulang",   icon: RefreshCw,      color: "#3B82F6", available: false },
+  { label: "Berulang",   icon: RefreshCw,      color: "#3B82F6", available: true, path: "/recurring" },
   { label: "Target",     icon: Target,         color: "#10B981", available: false },
   { label: "Tagihan",    icon: FileText,       color: "#EF4444", available: false },
   { label: "Utang",      icon: CreditCard,     color: "#8B5CF6", available: true, path: "/debts" },
   { label: "Scan Struk", icon: ScanLine,       color: "#06B6D4", available: true, path: "/scan" },
   { label: "Chat AI",    icon: MessageSquare,  color: "#4F46E5", available: true, path: "/chat" },
-  { label: "Keinginan",  icon: Star,           color: "#FBBF24", available: false },
+  { label: "Keinginan",  icon: LucideIcons.Gift, color: "#FBBF24", available: true, path: "/wishlist" },
 ];
 
 // ─── Quick record items (Section 4) ─────────────────────────

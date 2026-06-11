@@ -1,5 +1,5 @@
 require("dotenv").config();
-// Trigger reload for Prisma client regeneration updates
+// Trigger reload for Prisma client regeneration updates: 2026-06-11T07:20:00
 
 const express = require("express");
 const cors = require("cors");
@@ -39,6 +39,20 @@ app.use(errorMiddleware);
 app.listen(PORT, () => {
   console.log(`✅ Server berjalan di http://localhost:${PORT}`);
   console.log(`📦 Environment: ${process.env.NODE_ENV || "development"}`);
+
+  // Start background runner for auto-transactions
+  try {
+    const { autoExecuteAllDueRecurrings } = require("./services/recurring.service");
+    // Run immediately on start
+    autoExecuteAllDueRecurrings().catch(err => console.error("[AutoRecurring Startup Error]:", err.message));
+    // Run every 1 hour
+    setInterval(() => {
+      autoExecuteAllDueRecurrings().catch(err => console.error("[AutoRecurring Interval Error]:", err.message));
+    }, 1000 * 60 * 60);
+    console.log("⏰ Background runner for Auto Transactions initialized.");
+  } catch (err) {
+    console.error("[AutoRecurring Init Error]:", err.message);
+  }
 });
 
 module.exports = app;

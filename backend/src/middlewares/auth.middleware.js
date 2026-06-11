@@ -35,6 +35,15 @@ const authMiddleware = async (req, res, next) => {
     }
 
     req.user = user;
+
+    // Auto-execute active due recurring transactions
+    try {
+      const { autoExecuteDueRecurrings } = require("../services/recurring.service");
+      await autoExecuteDueRecurrings(user.id);
+    } catch (autoErr) {
+      console.error(`[AutoRecurring] Error auto-executing for user ${user.id}:`, autoErr.message);
+    }
+
     next();
   } catch (error) {
     // Jika error sudah punya statusCode (dari createError), langsung lempar

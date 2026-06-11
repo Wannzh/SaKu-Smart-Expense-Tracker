@@ -13,22 +13,30 @@ const TransactionCard = memo(function TransactionCard({
 }) {
   const isIncome = transaction.type === "INCOME";
   const isTransfer = transaction.type === "TRANSFER";
+  const isWishlist = transaction.description?.startsWith("Tabungan Keinginan:") || transaction.description?.startsWith("Tabungan Awal Keinginan:") || transaction.categoryId === "cat-wishlist";
 
   const IconComponent = isTransfer
     ? LucideIcons.ArrowLeftRight
+    : isWishlist
+    ? LucideIcons.Gift
     : LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
 
   const catColor = isTransfer
+    ? "#6366F1"
+    : isWishlist
     ? "#6366F1"
     : transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
 
   const subName = transaction.subCategory?.name;
   const desc = transaction.description;
+  const displayDesc = isWishlist
+    ? desc.replace("Tabungan Keinginan: ", "").replace("Tabungan Awal Keinginan: ", "")
+    : desc;
   const subtitle = isTransfer
     ? `${transaction.fromWallet?.name || "-"} → ${transaction.toWallet?.name || "-"}`
-    : subName && desc
-    ? `${subName} · ${desc}`
-    : subName || desc || formatDate(transaction.date);
+    : subName && displayDesc
+    ? `${subName} · ${displayDesc}`
+    : subName || displayDesc || formatDate(transaction.date);
 
   return (
     <div
@@ -51,7 +59,7 @@ const TransactionCard = memo(function TransactionCard({
       {/* Info */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-          {isTransfer ? "Transfer" : transaction.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
+          {isTransfer ? "Transfer" : isWishlist ? "Transaksi Keinginan" : transaction.category?.name || (isIncome ? "Pemasukan" : "Pengeluaran")}
         </p>
         <p className="truncate text-xs text-[var(--text-tertiary)] mt-0.5" title={subtitle}>
           {subtitle}

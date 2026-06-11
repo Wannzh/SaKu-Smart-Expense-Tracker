@@ -11,6 +11,8 @@ const walletRoutes = require("./wallet.route");
 const transferRoutes = require("./transfer.route");
 const budgetRoutes = require("./budget.route");
 const debtRoutes = require("./debt.route");
+const wishlistRoutes = require("./wishlist.route");
+const recurringRoutes = require("./recurring.route");
 
 router.use("/auth", authRoutes);
 router.use("/transactions", transactionRoutes);
@@ -21,5 +23,7 @@ router.use("/wallets", walletRoutes);
 router.use("/transfers", transferRoutes);
 router.use("/budgets", budgetRoutes);
 router.use("/debts", debtRoutes);
+router.use("/wishlists", wishlistRoutes);
+router.use("/recurrings", recurringRoutes);
 
 module.exports = router;

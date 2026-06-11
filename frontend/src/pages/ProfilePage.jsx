@@ -80,7 +80,10 @@ const ProfilePage = memo(function ProfilePage() {
 
     setIsSubmitting(true);
     try {
-      const res = await updateProfile({ name: editName });
+      const formData = new FormData();
+      formData.append("name", editName.trim());
+      
+      const res = await updateProfile(formData);
       setUser(res.data.data.user);
       toast.success("Profil berhasil diperbarui! ✅");
       setIsEditOpen(false);
@@ -89,6 +92,29 @@ const ProfilePage = memo(function ProfilePage() {
       toast.error(err.response?.data?.message || "Gagal memperbarui profil");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Ukuran file maksimal 5MB");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const loadToast = toast.loading("Mengunggah foto profil...");
+    try {
+      const res = await updateProfile(formData);
+      setUser(res.data.data.user);
+      toast.success("Foto profil berhasil diperbarui! ✅", { id: loadToast });
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Gagal mengunggah foto profil", { id: loadToast });
     }
   };
 
@@ -118,15 +144,30 @@ const ProfilePage = memo(function ProfilePage() {
         <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-4">
           <div className="flex flex-col items-center justify-center py-8 px-4 bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-xs relative text-center">
             <div className="relative group mb-3 select-none">
-              <div className="h-20 w-20 rounded-full bg-indigo-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-md">
-                {initialName}
-              </div>
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="h-20 w-20 rounded-full object-cover shadow-md border border-[var(--border-color)]"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-indigo-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-md">
+                  {initialName}
+                </div>
+              )}
+              <input
+                type="file"
+                id="avatarInput"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
               <button
-                onClick={() => setIsEditOpen(true)}
+                onClick={() => document.getElementById("avatarInput").click()}
                 className="absolute bottom-0 right-0 h-6.5 w-6.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full flex items-center justify-center cursor-pointer shadow border-2 border-[var(--card-bg)] active:scale-95 transition-all"
-                title="Edit Profil"
+                title="Edit Foto Profil"
               >
-                <LucideIcons.Edit2 className="h-3 w-3" />
+                <LucideIcons.Camera className="h-3.5 w-3.5" />
               </button>
             </div>
 

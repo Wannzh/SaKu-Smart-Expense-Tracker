@@ -89,14 +89,21 @@ const login = async ({ email, password }) => {
  * @param {{ name: string }} data
  * @returns {Promise<object>}
  */
-const updateProfile = async (userId, { name }) => {
-  if (!name || !name.trim()) {
-    throw createError(400, "Nama harus diisi");
+const updateProfile = async (userId, { name, avatar }) => {
+  const updateData = {};
+  if (name !== undefined) {
+    if (!name || !name.trim()) {
+      throw createError(400, "Nama harus diisi");
+    }
+    updateData.name = name.trim();
+  }
+  if (avatar !== undefined) {
+    updateData.avatar = avatar;
   }
 
   const updatedUser = await prisma.user.update({
     where: { id: userId },
-    data: { name: name.trim() },
+    data: updateData,
     select: userSelect,
   });
 

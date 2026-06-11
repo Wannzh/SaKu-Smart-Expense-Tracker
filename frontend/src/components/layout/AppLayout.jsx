@@ -12,7 +12,9 @@ const AppLayout = memo(function AppLayout({ children }) {
     "/about",
     "/bug-report",
     "/feedback",
-    "/debts"
+    "/debts",
+    "/wishlist",
+    "/recurring"
   ].includes(location.pathname);
 
   return (

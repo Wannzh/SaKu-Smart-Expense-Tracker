@@ -1,6 +1,7 @@
 const { Router } = require("express");
 const authController = require("../controllers/auth.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
+const upload = require("../middlewares/upload.middleware");
 
 const router = Router();
 
@@ -17,6 +18,6 @@ router.post("/logout", authController.logout);
 router.get("/me", authMiddleware, authController.getMe);
 
 // PUT /api/auth/profile (protected)
-router.put("/profile", authMiddleware, authController.updateProfile);
+router.put("/profile", authMiddleware, upload.single("avatar"), authController.updateProfile);
 
 module.exports = router;

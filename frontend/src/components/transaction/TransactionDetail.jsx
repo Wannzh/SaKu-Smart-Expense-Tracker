@@ -30,10 +30,15 @@ const TransactionDetail = memo(function TransactionDetail({
 
   const isTransfer = transaction.type === "TRANSFER";
   const isIncome = transaction.type === "INCOME";
+  const isWishlist = transaction.description?.startsWith("Tabungan Keinginan:") || transaction.description?.startsWith("Tabungan Awal Keinginan:") || transaction.categoryId === "cat-wishlist";
   const IconComponent = isTransfer
     ? LucideIcons.ArrowLeftRight
+    : isWishlist
+    ? LucideIcons.Gift
     : LucideIcons[transaction.category?.icon] || (isIncome ? LucideIcons.TrendingUp : LucideIcons.TrendingDown);
   const catColor = isTransfer
+    ? "#6366F1"
+    : isWishlist
     ? "#6366F1"
     : transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
 
@@ -109,12 +114,14 @@ const TransactionDetail = memo(function TransactionDetail({
                   "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold mt-2",
                   isTransfer
                     ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
+                    : isWishlist
+                    ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
                     : isIncome
                     ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                     : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400"
                 )}
               >
-                {isTransfer ? "Transfer" : isIncome ? "Pemasukan" : "Pengeluaran"}
+                {isTransfer ? "Transfer" : isWishlist ? "Transaksi Keinginan" : isIncome ? "Pemasukan" : "Pengeluaran"}
               </span>
             </div>
 
@@ -160,7 +167,9 @@ const TransactionDetail = memo(function TransactionDetail({
                   <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
                     <span className="text-xs text-[var(--text-secondary)]">Judul</span>
                     <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
-                      {transaction.description || "-"}
+                      {isWishlist 
+                        ? transaction.description.replace("Tabungan Keinginan: ", "").replace("Tabungan Awal Keinginan: ", "")
+                        : transaction.description || "-"}
                     </span>
                   </div>
 
@@ -168,7 +177,7 @@ const TransactionDetail = memo(function TransactionDetail({
                   <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
                     <span className="text-xs text-[var(--text-secondary)]">Kategori</span>
                     <span className="text-xs font-semibold text-[var(--text-primary)] text-right">
-                      {transaction.category?.name || "-"}
+                      {isWishlist ? "Transaksi Keinginan" : transaction.category?.name || "-"}
                       {transaction.subCategory && (
                         <span className="text-[var(--text-secondary)] font-normal">
                           {" · "}{transaction.subCategory.name}

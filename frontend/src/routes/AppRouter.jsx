@@ -23,6 +23,9 @@ const FeedbackPage = lazy(() => import("../pages/FeedbackPage"));
 const BugReportPage = lazy(() => import("../pages/BugReportPage"));
 const BudgetPage = lazy(() => import("../pages/BudgetPage"));
 const DebtPage = lazy(() => import("../pages/DebtPage"));
+const WishlistPage = lazy(() => import("../pages/WishlistPage"));
+const RecurringPage = lazy(() => import("../pages/RecurringPage"));
+
 
 /**
  * Fallback loading untuk Suspense
@@ -201,6 +204,23 @@ export default function AppRouter() {
               </ProtectedPage>
             }
           />
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedPage>
+                <WishlistPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/recurring"
+            element={
+              <ProtectedPage>
+                <RecurringPage />
+              </ProtectedPage>
+            }
+          />
+
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

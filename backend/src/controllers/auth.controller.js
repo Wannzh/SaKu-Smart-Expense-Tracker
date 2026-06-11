@@ -1,6 +1,7 @@
 const authService = require("../services/auth.service");
 const { sendSuccess } = require("../utils/response");
 const { setTokenCookie, clearTokenCookie } = require("../utils/token");
+const { uploadToCloudinary } = require("../utils/cloudinary");
 
 /**
  * POST /api/auth/register
@@ -41,15 +42,21 @@ const getMe = async (req, res, next) => {
   sendSuccess(res, 200, "Data user berhasil diambil", { user: req.user });
 };
 
-/**
- * PUT /api/auth/profile (protected)
- */
 const updateProfile = async (req, res, next) => {
-  const { name } = req.body;
-  const userId = req.user.id;
+  try {
+    const { name } = req.body;
+    const userId = req.user.id;
+    
+    let avatarUrl = undefined;
+    if (req.file) {
+      avatarUrl = await uploadToCloudinary(req.file.buffer, "avatar");
+    }
 
-  const user = await authService.updateProfile(userId, { name });
-  sendSuccess(res, 200, "Profil berhasil diperbarui", { user });
+    const user = await authService.updateProfile(userId, { name, avatar: avatarUrl });
+    sendSuccess(res, 200, "Profil berhasil diperbarui", { user });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = { register, login, logout, getMe, updateProfile };
