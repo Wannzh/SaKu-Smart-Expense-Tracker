@@ -197,15 +197,16 @@ model Debt {
   status      DebtStatus @default(ACTIVE)
   personName  String     // nama orang
   amount      Decimal    @db.Decimal(14, 2)
-  paidAmount  Decimal    @default(0) @db.Decimal(14, 2)
-  notes       String?
-  borrowDate  DateTime   // tanggal pinjam
-  dueDate     DateTime?  // tanggal jatuh tempo (opsional)
-  paidDate    DateTime?  // tanggal lunas
-  walletId    String?
-  userId      String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  paidAmount    Decimal    @default(0) @db.Decimal(14, 2)
+  paymentsCount Int        @default(0)
+  notes         String?
+  borrowDate    DateTime   // tanggal pinjam
+  dueDate       DateTime?  // tanggal jatuh tempo (opsional)
+  paidDate      DateTime?  // tanggal lunas
+  walletId      String?
+  userId        String
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   wallet Wallet? @relation(fields: [walletId], references: [id], onDelete: SetNull)

@@ -133,6 +133,14 @@ const DebtPage = memo(function DebtPage() {
     return debts.filter((d) => d.type === activeTab);
   }, [debts, activeTab]);
 
+  const unpaidDebts = useMemo(() => {
+    return filteredDebts.filter((d) => d.status !== "PAID");
+  }, [filteredDebts]);
+
+  const paidDebts = useMemo(() => {
+    return filteredDebts.filter((d) => d.status === "PAID");
+  }, [filteredDebts]);
+
   // Open Add Form Modal
   const handleOpenAdd = useCallback(() => {
     setForm({
@@ -252,6 +260,112 @@ const DebtPage = memo(function DebtPage() {
     return wallets.find((w) => w.id === payForm.walletId)?.name || "Pilih Dompet...";
   }, [wallets, payForm.walletId]);
 
+  const renderDebtCard = useCallback((item) => {
+    const amount = Number(item.amount);
+    const paidAmount = Number(item.paidAmount);
+    const remaining = Math.max(0, amount - paidAmount);
+    const isPaid = item.status === "PAID";
+
+    const paidPercent = amount > 0 ? Math.round((paidAmount / amount) * 100) : 0;
+    const unpaidPercent = 100 - paidPercent;
+
+    return (
+      <div
+        key={item.id}
+        onClick={() => handleOpenDetail(item)}
+        className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] p-4 flex flex-col gap-3.5 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all duration-200 group shadow-xs active:scale-[0.99]"
+      >
+        {/* Top Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3.5 min-w-0">
+            {/* Avatar Circle */}
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 text-xs font-black select-none">
+              {getInitials(item.personName)}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h4 className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                  {item.personName}
+                </h4>
+                {getStatusBadge(item)}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-[var(--text-tertiary)] font-semibold mt-1">
+                {isPaid ? (
+                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                    <Calendar className="h-3 w-3" />
+                    Lunas
+                  </span>
+                ) : (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Pinjam: {dayjs(item.borrowDate).format("D MMM YYYY")}
+                    </span>
+                    {item.dueDate && (
+                      <span className="flex items-center gap-1 border-l border-[var(--border-color)]/80 pl-2.5">
+                        <Clock className="h-3 w-3" />
+                        Tempo: {dayjs(item.dueDate).format("D MMM YYYY")}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-[var(--border-color)]/40 sm:border-t-0">
+            <div className="text-right">
+              <p className="text-sm font-extrabold text-[var(--text-primary)] mt-0.5 tabular-nums">
+                {formatCurrency(isPaid ? amount : remaining)}
+              </p>
+              <p className={clsx(
+                "text-[10px] font-semibold text-[var(--text-tertiary)] select-none",
+                isPaid && "text-emerald-600 dark:text-emerald-400"
+              )}>
+                {isPaid ? "Telah dibayar" : "Belum dibayar"}
+              </p>
+            </div>
+            {!isPaid && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenPay(item);
+                }}
+                className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0"
+              >
+                Bayar
+              </button>
+            )}
+            <ChevronRight className="h-4.5 w-4.5 text-[var(--text-tertiary)] group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+
+        {/* Bottom Section - Progress Bar & Stats */}
+        <div className="w-full mt-1 pt-3.5 border-t border-[var(--border-color)]/30">
+          <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-1.5 overflow-hidden">
+            <div
+              className={clsx(
+                "h-1.5 rounded-full transition-all duration-300",
+                isPaid ? "bg-emerald-500" : "bg-indigo-600"
+              )}
+              style={{ width: `${paidPercent}%` }}
+            />
+          </div>
+          <div className="flex justify-between items-center text-[10px] font-semibold text-[var(--text-tertiary)] mt-2 select-none">
+            <div className="flex items-center gap-1.5">
+              <span className="text-emerald-600 dark:text-emerald-400">Terbayar {paidPercent}%</span>
+              <span>•</span>
+              <span className="text-red-500">Belum dibayar {unpaidPercent}%</span>
+            </div>
+            <span className="font-bold text-[var(--text-secondary)]">
+              {item.paymentsCount || 0}x bayar
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }, [handleOpenDetail, handleOpenPay]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 md:px-8 pb-24 animate-fade-slide-up">
       {/* Header */}
@@ -370,66 +484,35 @@ const DebtPage = memo(function DebtPage() {
           <p className="text-xs text-[var(--text-secondary)] font-medium">Memuat data utang & piutang...</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {filteredDebts.length > 0 ? (
-            filteredDebts.map((item) => {
-              const remaining = Number(item.amount) - Number(item.paidAmount);
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => handleOpenDetail(item)}
-                  className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all duration-200 group shadow-xs active:scale-[0.99]"
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    {/* Avatar Circle */}
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 text-xs font-black select-none">
-                      {getInitials(item.personName)}
+            <>
+              {/* Kelompok Belum Lunas */}
+              {unpaidDebts.length > 0 && (
+                <div className="space-y-3">
+                  {unpaidDebts.map((item) => renderDebtCard(item))}
+                </div>
+              )}
+
+              {/* Garis Pemisah Selesai */}
+              {paidDebts.length > 0 && (
+                <>
+                  <div className="flex items-center gap-4 py-2 select-none">
+                    <div className="flex-1 h-px bg-[var(--border-color)]" />
+                    <div className="flex items-center gap-1.5 text-emerald-500 font-bold text-xs uppercase tracking-wider">
+                      <CheckCircle className="h-4.5 w-4.5" />
+                      <span>Selesai</span>
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-semibold text-[var(--text-primary)] truncate">
-                          {item.personName}
-                        </h4>
-                        {getStatusBadge(item)}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-[var(--text-tertiary)] font-semibold mt-1">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Pinjam: {dayjs(item.borrowDate).format("D MMM YYYY")}
-                        </span>
-                        {item.dueDate && (
-                          <span className="flex items-center gap-1 border-l border-[var(--border-color)]/80 pl-2.5">
-                            <Clock className="h-3 w-3" />
-                            Tempo: {dayjs(item.dueDate).format("D MMM YYYY")}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <div className="flex-1 h-px bg-[var(--border-color)]" />
                   </div>
 
-                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t border-[var(--border-color)]/40 sm:border-t-0">
-                    <div className="text-right">
-                      <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)] select-none">Sisa Tagihan</p>
-                      <p className="text-sm font-extrabold text-[var(--text-primary)] mt-0.5 tabular-nums">
-                        {formatCurrency(remaining)}
-                      </p>
-                    </div>
-                    {item.status !== "PAID" && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenPay(item);
-                        }}
-                        className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0"
-                      >
-                        Bayar
-                      </button>
-                    )}
-                    <ChevronRight className="h-4.5 w-4.5 text-[var(--text-tertiary)] group-hover:translate-x-0.5 transition-transform" />
+                  {/* Kelompok Lunas */}
+                  <div className="space-y-3">
+                    {paidDebts.map((item) => renderDebtCard(item))}
                   </div>
-                </div>
-              );
-            })
+                </>
+              )}
+            </>
           ) : (
             /* Empty State */
             <div className="rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] py-16 px-6 text-center shadow-xs select-none">

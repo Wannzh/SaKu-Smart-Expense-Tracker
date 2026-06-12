@@ -119,6 +119,23 @@ const createDebt = async (userId, { type, personName, amount, notes, borrowDate,
           balance: { increment: walletIncrement },
         },
       });
+
+      // 2b. Create transaction record
+      const transactionType = type === "DEBT" ? "INCOME" : "EXPENSE";
+      const transactionDesc = type === "DEBT"
+        ? `Pinjam dari ${personName} [Ref: ${debt.id}]`
+        : `Pinjamkan ke ${personName} [Ref: ${debt.id}]`;
+
+      await tx.transaction.create({
+        data: {
+          amount: parseAmount,
+          type: transactionType,
+          description: transactionDesc,
+          date: borrowDateTime,
+          userId,
+          walletId,
+        },
+      });
     }
 
     return debt;
@@ -192,6 +209,7 @@ const payDebt = async (userId, debtId, { paidAmount, walletId }) => {
       where: { id: debtId },
       data: {
         paidAmount: newPaid,
+        paymentsCount: { increment: 1 },
         status: isFullyPaid ? "PAID" : existing.status,
         paidDate: isFullyPaid ? new Date() : null,
       },
@@ -215,6 +233,23 @@ const payDebt = async (userId, debtId, { paidAmount, walletId }) => {
         where: { id: activeWalletId },
         data: {
           balance: { increment: walletIncrement },
+        },
+      });
+
+      // 2b. Create payment transaction record
+      const transactionType = existing.type === "DEBT" ? "EXPENSE" : "INCOME";
+      const transactionDesc = existing.type === "DEBT"
+        ? `Bayar hutang ke ${existing.personName} [Ref: ${debtId}]`
+        : `Terima pembayaran dari ${existing.personName} [Ref: ${debtId}]`;
+
+      await tx.transaction.create({
+        data: {
+          amount: paymentAmount,
+          type: transactionType,
+          description: transactionDesc,
+          date: new Date(),
+          userId,
+          walletId: activeWalletId,
         },
       });
     }
@@ -254,6 +289,16 @@ const deleteDebt = async (userId, debtId) => {
         }
       }
     }
+
+    // Delete associated transactions
+    await tx.transaction.deleteMany({
+      where: {
+        userId,
+        description: {
+          contains: `[Ref: ${debtId}]`,
+        },
+      },
+    });
 
     // Delete record
     return tx.debt.delete({ where: { id: debtId } });

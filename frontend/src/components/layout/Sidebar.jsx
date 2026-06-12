@@ -24,8 +24,6 @@ const navItems = [
   { to: "/transactions", icon: ArrowLeftRight, label: "Transaksi" },
   { to: "/scan", icon: ScanLine, label: "Scan Struk" },
   { to: "/chat", icon: MessageSquare, label: "Chat AI" },
-  { to: "/wishlist", icon: Gift, label: "Keinginan" },
-  { to: "/recurring", icon: RefreshCw, label: "Berulang" },
 ];
 
 const Sidebar = memo(function Sidebar() {
