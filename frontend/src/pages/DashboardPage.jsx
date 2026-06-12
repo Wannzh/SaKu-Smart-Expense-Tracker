@@ -175,7 +175,7 @@ const MenuGrid = memo(function MenuGrid({ onNavigate }) {
 // ═══════════════════════════════════════════════════════════════
 // SECTION 3 — ANGGARAN BULANAN
 // ═══════════════════════════════════════════════════════════════
-const BudgetCard = memo(function BudgetCard({ onNavigate }) {
+const BudgetCard = memo(function BudgetCard({ activePeriod, filteredTransactions = [], onNavigate }) {
   const { budgets, getBudgets } = useBudget();
 
   useEffect(() => {
@@ -187,11 +187,45 @@ const BudgetCard = memo(function BudgetCard({ onNavigate }) {
     onNavigate("/budget");
   }, [onNavigate]);
 
+  const computedBudgets = useMemo(() => {
+    const daysInMonth = dayjs().daysInMonth();
+
+    return budgets.map((b) => {
+      const monthlyLimit = Number(b.amount);
+      let limit = monthlyLimit;
+
+      if (activePeriod === "Hari") {
+        limit = monthlyLimit / daysInMonth;
+      } else if (activePeriod === "Minggu") {
+        limit = (monthlyLimit * 7) / daysInMonth;
+      } else if (activePeriod === "Bulan") {
+        limit = monthlyLimit;
+      } else if (activePeriod === "Tahun") {
+        limit = monthlyLimit * 12;
+      } else if (activePeriod === "Semua") {
+        limit = monthlyLimit;
+      }
+
+      const spent = filteredTransactions
+        .filter((tx) => tx.type === "EXPENSE" && tx.categoryId === b.categoryId)
+        .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+      const percentage = limit > 0 ? Math.round((spent / limit) * 100) : 0;
+
+      return {
+        ...b,
+        limit,
+        spent,
+        percentage,
+      };
+    });
+  }, [budgets, activePeriod, filteredTransactions]);
+
   const topBudgets = useMemo(() => {
-    return [...budgets]
+    return [...computedBudgets]
       .sort((a, b) => b.percentage - a.percentage)
       .slice(0, 3);
-  }, [budgets]);
+  }, [computedBudgets]);
 
   if (budgets.length === 0) {
     return (
@@ -594,8 +628,11 @@ const DashboardPage = memo(function DashboardPage() {
       {/* ── SECTION 2: Menu ────────────────────────────────── */}
       <MenuGrid onNavigate={handleNavigate} />
 
-      {/* ── SECTION 3: Anggaran Bulanan ────────────────────── */}
-      <BudgetCard onNavigate={handleNavigate} />
+      <BudgetCard
+        activePeriod={activePeriod}
+        filteredTransactions={filteredTransactions}
+        onNavigate={handleNavigate}
+      />
 
       {/* ── SECTION 4: Rekam Cepat ─────────────────────────── */}
       <QuickRecord onNavigate={handleNavigate} />
