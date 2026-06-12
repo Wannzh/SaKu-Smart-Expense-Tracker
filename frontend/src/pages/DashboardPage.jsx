@@ -297,6 +297,10 @@ const BudgetCard = memo(function BudgetCard({ activePeriod, filteredTransactions
                   style={{ width: `${Math.min(100, budget.percentage)}%` }}
                 />
               </div>
+              <div className="flex justify-between items-center text-[10px] text-[var(--text-tertiary)] font-bold mt-0.5 select-none">
+                <span>{formatCurrency(budget.spent)}</span>
+                <span>{formatCurrency(budget.limit)}</span>
+              </div>
             </div>
           );
         })}
