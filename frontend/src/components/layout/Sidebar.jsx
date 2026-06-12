@@ -115,9 +115,17 @@ const Sidebar = memo(function Sidebar() {
 
         {/* User info */}
         <div className="flex items-center gap-3 mb-3 px-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
-            {user?.name?.charAt(0)?.toUpperCase() || "U"}
-          </div>
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="h-9 w-9 rounded-full object-cover border border-[var(--border-color)]"
+            />
+          ) : (
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
+              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
               {user?.name || "User"}

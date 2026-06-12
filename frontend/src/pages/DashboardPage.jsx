@@ -568,9 +568,17 @@ const DashboardPage = memo(function DashboardPage() {
           <h1 className="text-xl font-bold text-[var(--text-primary)]">
             ~ Hai, {firstName}!
           </h1>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white shadow-sm">
-            {firstName.charAt(0).toUpperCase()}
-          </div>
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt={user.name}
+              className="h-9 w-9 rounded-full object-cover border border-[var(--border-color)] shadow-sm"
+            />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-bold text-white shadow-sm">
+              {firstName.charAt(0).toUpperCase()}
+            </div>
+          )}
         </div>
 
         <SummaryCard
