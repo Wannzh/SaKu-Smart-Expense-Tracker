@@ -754,6 +754,42 @@ const DebtPage = memo(function DebtPage() {
               placeholder="Masukkan nominal pelunasan..."
             />
 
+            {/* Quick-select Percentages */}
+            {(() => {
+              const remaining = Number(selectedDebt.amount) - Number(selectedDebt.paidAmount);
+              const val25 = Math.round(remaining * 0.25);
+              const val50 = Math.round(remaining * 0.5);
+              const val100 = remaining;
+              const currentVal = Number(payForm.paidAmount);
+
+              return (
+                <div className="flex gap-2.5 mt-1.5 mb-2 select-none">
+                  {[
+                    { label: "25%", value: val25 },
+                    { label: "50%", value: val50 },
+                    { label: "Full", value: val100 },
+                  ].map((opt) => {
+                    const isActive = currentVal === opt.value;
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => setPayForm((prev) => ({ ...prev, paidAmount: opt.value.toString() }))}
+                        className={clsx(
+                          "flex-1 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center active:scale-95",
+                          isActive
+                            ? "bg-indigo-600 border-indigo-600 text-white shadow-xs"
+                            : "border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/50 text-[var(--text-primary)]"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             {/* Wallet Selection */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">

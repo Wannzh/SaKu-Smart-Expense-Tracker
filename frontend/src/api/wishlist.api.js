@@ -16,8 +16,8 @@ export const updateWishlist = (id, formData) =>
     headers: { "Content-Type": "multipart/form-data" },
   });
 
-export const addWishlistSavings = (id, amount, walletId) =>
-  api.post(`/wishlists/${id}/savings`, { amount, walletId });
+export const markWishlistAchieved = (id) =>
+  api.patch(`/wishlists/${id}/achieve`);
 
 export const deleteWishlist = (id) =>
   api.delete(`/wishlists/${id}`);

@@ -4,12 +4,12 @@ const { uploadToCloudinary } = require("../utils/cloudinary");
 
 /**
  * GET /api/wishlists
- * Get list of wishlists with optional status and priority filters.
+ * Get list of wishlists with optional status filter.
  */
 const getWishlists = async (req, res, next) => {
   try {
-    const { status, priority } = req.query;
-    const result = await wishlistService.getWishlists(req.user.id, { status, priority });
+    const { status } = req.query;
+    const result = await wishlistService.getWishlists(req.user.id, { status });
     sendSuccess(res, 200, "Daftar keinginan berhasil diambil", result);
   } catch (error) {
     next(error);
@@ -36,7 +36,7 @@ const getWishlistById = async (req, res, next) => {
  */
 const createWishlist = async (req, res, next) => {
   try {
-    const { name, targetPrice, savedAmount, priority, productLink, notes, targetDate, walletId } = req.body;
+    const { name, targetPrice, productLink, notes, targetDate } = req.body;
     
     let uploadedImageUrl = null;
     if (req.file) {
@@ -46,13 +46,10 @@ const createWishlist = async (req, res, next) => {
     const wishlist = await wishlistService.createWishlist(req.user.id, {
       name,
       targetPrice,
-      savedAmount,
-      priority,
       imageUrl: uploadedImageUrl,
       productLink,
       notes,
       targetDate,
-      walletId,
     });
     sendSuccess(res, 201, "Keinginan berhasil ditambahkan", { wishlist });
   } catch (error) {
@@ -82,21 +79,6 @@ const updateWishlist = async (req, res, next) => {
 };
 
 /**
- * POST /api/wishlists/:id/savings
- * Add savings to a wishlist item.
- */
-const addSavings = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { amount, walletId } = req.body;
-    const wishlist = await wishlistService.addSavings(req.user.id, id, amount, walletId);
-    sendSuccess(res, 200, "Tabungan berhasil ditambahkan", { wishlist });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
  * DELETE /api/wishlists/:id
  * Delete a wishlist item.
  */
@@ -110,11 +92,25 @@ const deleteWishlist = async (req, res, next) => {
   }
 };
 
+/**
+ * PATCH /api/wishlists/:id/achieve
+ * Mark a wishlist item as achieved.
+ */
+const markAsAchieved = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const wishlist = await wishlistService.markAsAchieved(req.user.id, id);
+    sendSuccess(res, 200, "Keinginan berhasil ditandai sebagai tercapai", { wishlist });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getWishlists,
   getWishlistById,
   createWishlist,
   updateWishlist,
-  addSavings,
+  markAsAchieved,
   deleteWishlist,
 };

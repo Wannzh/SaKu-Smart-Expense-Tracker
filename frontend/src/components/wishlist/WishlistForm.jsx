@@ -1,73 +1,50 @@
-import { memo, useState, useEffect, useMemo } from "react";
+import { memo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Upload, Image as ImageIcon, ChevronDown, Banknote, Building2, Smartphone } from "lucide-react";
+import { X, Upload, Image as ImageIcon } from "lucide-react";
 import FloatingLabelInput from "../common/FloatingLabelInput";
 import Button from "../common/Button";
-import { formatCurrency } from "../../utils/format";
 import clsx from "clsx";
-import WalletPicker from "../transaction/WalletPicker";
-
-const walletIconMap = {
-  cash: Banknote,
-  bank: Building2,
-  ewallet: Smartphone,
-};
 
 const WishlistForm = memo(function WishlistForm({
   isOpen,
   onClose,
   onSubmit,
-  wallets = [],
   wishlist = null,
   isLoading = false,
 }) {
   const [formData, setFormData] = useState({
     name: "",
     targetPrice: "",
-    savedAmount: "",
-    priority: "MEDIUM",
     productLink: "",
-    notes: "",
     targetDate: "",
+    status: "ACTIVE",
   });
 
-  const [walletId, setWalletId] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [errors, setErrors] = useState({});
-  const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
-
-  const selectedWallet = useMemo(() => {
-    return wallets.find((w) => w.id === walletId);
-  }, [wallets, walletId]);
 
   useEffect(() => {
     if (wishlist) {
       setFormData({
         name: wishlist.name || "",
         targetPrice: wishlist.targetPrice?.toString() || "",
-        savedAmount: wishlist.savedAmount?.toString() || "",
-        priority: wishlist.priority || "MEDIUM",
         productLink: wishlist.productLink || "",
-        notes: wishlist.notes || "",
         targetDate: wishlist.targetDate ? new Date(wishlist.targetDate).toISOString().split("T")[0] : "",
+        status: wishlist.status || "ACTIVE",
       });
       setPreviewUrl(wishlist.imageUrl || "");
       setSelectedFile(null);
-      setWalletId("");
     } else {
       setFormData({
         name: "",
         targetPrice: "",
-        savedAmount: "",
-        priority: "MEDIUM",
         productLink: "",
-        notes: "",
         targetDate: "",
+        status: "ACTIVE",
       });
       setPreviewUrl("");
       setSelectedFile(null);
-      setWalletId("");
     }
     setErrors({});
   }, [wishlist, isOpen]);
@@ -105,10 +82,6 @@ const WishlistForm = memo(function WishlistForm({
     }
   };
 
-  const handlePrioritySelect = (priority) => {
-    setFormData((prev) => ({ ...prev, priority }));
-  };
-
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Nama barang wajib diisi";
@@ -116,15 +89,6 @@ const WishlistForm = memo(function WishlistForm({
       newErrors.targetPrice = "Harga target wajib diisi";
     } else if (Number(formData.targetPrice) <= 0) {
       newErrors.targetPrice = "Harga target harus lebih besar dari 0";
-    }
-
-    if (!wishlist) {
-      const parsedSaved = formData.savedAmount ? Number(formData.savedAmount) : 0;
-      if (parsedSaved < 0) {
-        newErrors.savedAmount = "Tabungan awal tidak boleh negatif";
-      } else if (parsedSaved > 0 && !walletId) {
-        newErrors.walletId = "Pilih dompet untuk tabungan awal";
-      }
     }
 
     setErrors(newErrors);
@@ -139,18 +103,7 @@ const WishlistForm = memo(function WishlistForm({
     const data = new FormData();
     data.append("name", formData.name.trim());
     data.append("targetPrice", Number(formData.targetPrice));
-    
-    if (!wishlist) {
-      const parsedSaved = formData.savedAmount ? Number(formData.savedAmount) : 0;
-      data.append("savedAmount", parsedSaved);
-      if (parsedSaved > 0) {
-        data.append("walletId", walletId);
-      }
-    }
-
-    data.append("priority", formData.priority);
     data.append("productLink", formData.productLink.trim());
-    data.append("notes", formData.notes.trim());
     
     if (formData.targetDate) {
       data.append("targetDate", formData.targetDate);
@@ -190,111 +143,7 @@ const WishlistForm = memo(function WishlistForm({
 
           {/* Content */}
           <div className="p-6 overflow-y-auto flex-1 scrollbar-none space-y-5">
-            {/* Nama Barang */}
-            <FloatingLabelInput
-              label="Nama Barang"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              error={errors.name}
-              required
-            />
-
-            {/* Target Harga */}
-            <FloatingLabelInput
-              label="Harga Target"
-              name="targetPrice"
-              type="number"
-              value={formData.targetPrice}
-              onChange={handleChange}
-              error={errors.targetPrice}
-              required
-            />
-
-            {/* Tabungan Awal (only show for creating new item) */}
-            {!wishlist && (
-              <FloatingLabelInput
-                label="Tabungan Awal (Opsional)"
-                name="savedAmount"
-                type="number"
-                value={formData.savedAmount}
-                onChange={handleChange}
-                error={errors.savedAmount}
-              />
-            )}
-
-            {/* Wallet Picker for Initial Savings */}
-            {!wishlist && Number(formData.savedAmount) > 0 && (
-              <div className="flex flex-col gap-1.5 w-full">
-                <label className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] tracking-wider">
-                  Pilih Dompet untuk Tabungan Awal <span className="text-red-500">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsWalletPickerOpen(true)}
-                  className="w-full flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 py-3 bg-[var(--bg-secondary)] hover:border-indigo-500 text-left cursor-pointer transition-all mt-1"
-                >
-                  {selectedWallet ? (
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div
-                        className="flex h-6 w-6 items-center justify-center rounded-lg shrink-0"
-                        style={{
-                          backgroundColor: `${selectedWallet.color || "#6B7280"}18`,
-                          color: selectedWallet.color || "#6B7280",
-                        }}
-                      >
-                        {(() => {
-                          const Icon = walletIconMap[selectedWallet.type] || Banknote;
-                          return <Icon className="h-3.5 w-3.5" />;
-                        })()}
-                      </div>
-                      <span className="font-semibold text-sm text-[var(--text-primary)] truncate">
-                        {selectedWallet.name} ({formatCurrency(selectedWallet.balance)})
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-[var(--text-tertiary)] text-xs">Pilih Dompet...</span>
-                  )}
-                  <ChevronDown className="h-4 w-4 text-[var(--text-tertiary)] shrink-0" />
-                </button>
-                {errors.walletId && (
-                  <p className="text-xs text-red-500 px-1">{errors.walletId}</p>
-                )}
-              </div>
-            )}
-
-            {/* Prioritas */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-[var(--text-secondary)]">
-                Prioritas
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {[
-                  { key: "LOW", label: "Rendah", color: "border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" },
-                  { key: "MEDIUM", label: "Sedang", color: "border-amber-500/30 text-amber-600 dark:text-amber-400 bg-amber-500/10" },
-                  { key: "HIGH", label: "Tinggi", color: "border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/10" },
-                ].map((p) => {
-                  const isSelected = formData.priority === p.key;
-                  return (
-                    <button
-                      key={p.key}
-                      type="button"
-                      onClick={() => handlePrioritySelect(p.key)}
-                      className={clsx(
-                        "py-2 px-3 text-xs font-semibold rounded-xl border text-center transition-all cursor-pointer",
-                        isSelected
-                          ? p.color + " ring-2 ring-indigo-500"
-                          : "border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] bg-transparent"
-                      )}
-                    >
-                      {p.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Image Upload instead of Link URL */}
+            {/* Foto Barang */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-[var(--text-secondary)]">
                 Foto Barang (Opsional)
@@ -332,54 +181,46 @@ const WishlistForm = memo(function WishlistForm({
               )}
             </div>
 
+            {/* Nama Barang */}
+            <FloatingLabelInput
+              label="Nama Barang"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              error={errors.name}
+              required
+            />
+
+            {/* Harga */}
+            <FloatingLabelInput
+              label="Harga"
+              name="targetPrice"
+              type="number"
+              value={formData.targetPrice}
+              onChange={handleChange}
+              error={errors.targetPrice}
+              required
+              prefix="Rp"
+              hint="cth. 500000"
+            />
+
+            {/* Target Tanggal */}
+            <FloatingLabelInput
+              label="Target Tanggal"
+              name="targetDate"
+              type="date"
+              value={formData.targetDate}
+              onChange={handleChange}
+            />
+
             {/* Link Produk */}
             <FloatingLabelInput
               label="Link Produk (Opsional)"
               name="productLink"
               value={formData.productLink}
               onChange={handleChange}
+              hint="cth. https://shopee.co.id/..."
             />
-
-            {/* Target Tanggal */}
-            <div className="flex flex-col gap-1.5 w-full">
-              <div className="relative">
-                <input
-                  id="targetDate"
-                  type="date"
-                  name="targetDate"
-                  value={formData.targetDate}
-                  onChange={handleChange}
-                  className="peer w-full rounded-xl border px-4 pt-5 pb-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] border-[var(--border-color)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950 transition-all duration-200"
-                />
-                <label
-                  htmlFor="targetDate"
-                  className="absolute left-4 top-1.5 text-xs text-[var(--text-tertiary)] select-none pointer-events-none"
-                >
-                  Target Tanggal Capai (Opsional)
-                </label>
-              </div>
-            </div>
-
-            {/* Catatan */}
-            <div className="flex flex-col gap-1.5 w-full">
-              <div className="relative">
-                <textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  placeholder=" "
-                  rows={2}
-                  className="peer w-full rounded-xl border px-4 pt-5 pb-2 text-sm text-[var(--text-primary)] bg-[var(--bg-secondary)] border-[var(--border-color)] outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-950 transition-all duration-200 resize-none"
-                />
-                <label
-                  htmlFor="notes"
-                  className="absolute left-4 top-1.5 text-xs text-[var(--text-tertiary)] origin-[0] -translate-y-0.5 scale-75 transform transition-all duration-200 peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100 peer-focus:top-1.5 peer-focus:-translate-y-0.5 peer-focus:scale-75 pointer-events-none select-none"
-                >
-                  Catatan (Opsional)
-                </label>
-              </div>
-            </div>
           </div>
 
           {/* Footer */}
@@ -397,22 +238,11 @@ const WishlistForm = memo(function WishlistForm({
               isLoading={isLoading}
               className="flex-1 rounded-xl py-3"
             >
-              Simpan
+              {wishlist ? "Simpan Perubahan" : "Simpan"}
             </Button>
           </div>
         </form>
       </div>
-
-      <WalletPicker
-        isOpen={isWalletPickerOpen}
-        onClose={() => setIsWalletPickerOpen(false)}
-        onSelect={(wallet) => {
-          setWalletId(wallet.id);
-          if (errors.walletId) {
-            setErrors((prev) => ({ ...prev, walletId: "" }));
-          }
-        }}
-      />
     </>,
     document.body
   );

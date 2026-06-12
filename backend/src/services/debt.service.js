@@ -101,16 +101,22 @@ const createDebt = async (userId, { type, personName, amount, notes, borrowDate,
       include: { wallet: true },
     });
 
-    // 2. Update wallet balance: subtract creation amount as specified (both DEBT and LOAN)
+    // 2. Update wallet balance:
+    // Jika type === "DEBT" (user berhutang, terima uang) → INCREMENT
+    // Jika type === "LOAN" (user meminjamkan, keluarkan uang) → DECREMENT
     if (walletId) {
       const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
       if (!wallet) throw createError(404, "Wallet tidak ditemukan");
       if (wallet.userId !== userId) throw createError(403, "Akses wallet ditolak");
 
+      const walletIncrement = type === "DEBT"
+        ? parseAmount   // DEBT: saldo bertambah
+        : -parseAmount; // LOAN: saldo berkurang
+
       await tx.wallet.update({
         where: { id: walletId },
         data: {
-          balance: { decrement: parseAmount },
+          balance: { increment: walletIncrement },
         },
       });
     }
@@ -192,17 +198,23 @@ const payDebt = async (userId, debtId, { paidAmount, walletId }) => {
       include: { wallet: true },
     });
 
-    // 2. Update wallet balance: increment paidAmount as specified (both DEBT and LOAN)
+    // 2. Update wallet balance:
+    // Jika type === "DEBT" (user bayar hutang, keluarkan uang) → DECREMENT
+    // Jika type === "LOAN" (user terima uang kembali) → INCREMENT
     const activeWalletId = walletId || existing.walletId;
     if (activeWalletId) {
       const wallet = await tx.wallet.findUnique({ where: { id: activeWalletId } });
       if (!wallet) throw createError(404, "Wallet tidak ditemukan");
       if (wallet.userId !== userId) throw createError(403, "Akses wallet ditolak");
 
+      const walletIncrement = existing.type === "DEBT"
+        ? -paymentAmount  // DEBT: saldo berkurang saat bayar
+        : paymentAmount;  // LOAN: saldo bertambah saat terima
+
       await tx.wallet.update({
         where: { id: activeWalletId },
         data: {
-          balance: { increment: paymentAmount },
+          balance: { increment: walletIncrement },
         },
       });
     }
@@ -221,17 +233,22 @@ const deleteDebt = async (userId, debtId) => {
     if (!existing) throw createError(404, "Data utang/piutang tidak ditemukan");
     if (existing.userId !== userId) throw createError(403, "Akses ditolak");
 
-    // Reverse wallet balance: since creation decremented `amount` and payments incremented `paidAmount`,
-    // the net balance effect was `- amount + paidAmount`. To reverse this completely, we need to add `amount - paidAmount`.
+    // Reverse wallet balance:
+    // DEBT saat create → INCREMENT, jadi reverse → DECREMENT
+    // LOAN saat create → DECREMENT, jadi reverse → INCREMENT
     if (existing.walletId) {
       const wallet = await tx.wallet.findUnique({ where: { id: existing.walletId } });
       if (wallet) {
-        const reverseAmount = Number(existing.amount) - Number(existing.paidAmount);
-        if (reverseAmount !== 0) {
+        const remainingUnpaid = Number(existing.amount) - Number(existing.paidAmount);
+        const reverseIncrement = existing.type === "DEBT"
+          ? -remainingUnpaid  // reverse DEBT: mengurangi sisa saldo dari wallet
+          : remainingUnpaid;  // reverse LOAN: mengembalikan sisa saldo ke wallet
+
+        if (reverseIncrement !== 0) {
           await tx.wallet.update({
             where: { id: existing.walletId },
             data: {
-              balance: { increment: reverseAmount },
+              balance: { increment: reverseIncrement },
             },
           });
         }

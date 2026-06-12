@@ -10,11 +10,18 @@ const FloatingLabelInput = memo(function FloatingLabelInput({
   onChange,
   error,
   required = false,
+  prefix,
+  hint,
   ...props
 }) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <div className="relative">
+        {prefix && (
+          <span className="absolute left-4 top-[17px] text-sm text-[var(--text-primary)] pointer-events-none select-none">
+            {prefix}
+          </span>
+        )}
         <input
           id={id || name}
           type={type}
@@ -30,7 +37,8 @@ const FloatingLabelInput = memo(function FloatingLabelInput({
             "focus:ring-2 focus:ring-offset-0",
             error
               ? "border-red-400 focus:border-red-500 focus:ring-red-200 dark:focus:ring-red-950"
-              : "border-[var(--border-color)] focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-950"
+              : "border-[var(--border-color)] focus:border-indigo-500 focus:ring-indigo-200 dark:focus:ring-indigo-950",
+            prefix && "pl-10"
           )}
           {...props}
         />
@@ -42,13 +50,19 @@ const FloatingLabelInput = memo(function FloatingLabelInput({
             "peer-placeholder-shown:translate-y-2.5 peer-placeholder-shown:scale-100",
             "peer-focus:top-1.5 peer-focus:-translate-y-0.5 peer-focus:scale-75",
             error ? "peer-focus:text-red-500" : "peer-focus:text-indigo-500",
-            "pointer-events-none select-none"
+            "pointer-events-none select-none",
+            prefix && "left-10 peer-placeholder-shown:left-10 peer-focus:left-10"
           )}
         >
           {label}
           {required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
       </div>
+      {hint && (
+        <p className="text-[10px] text-[var(--text-tertiary)] px-1 leading-normal">
+          {hint}
+        </p>
+      )}
       {error && (
         <p className="text-xs text-red-500 px-1">{error}</p>
       )}

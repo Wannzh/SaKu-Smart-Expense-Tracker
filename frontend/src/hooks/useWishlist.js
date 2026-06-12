@@ -3,7 +3,7 @@ import {
   getWishlists as apiGetWishlists,
   createWishlist as apiCreateWishlist,
   updateWishlist as apiUpdateWishlist,
-  addWishlistSavings as apiAddWishlistSavings,
+  markWishlistAchieved as apiMarkWishlistAchieved,
   deleteWishlist as apiDeleteWishlist,
 } from "../api/wishlist.api";
 import toast from "react-hot-toast";
@@ -11,11 +11,10 @@ import toast from "react-hot-toast";
 export function useWishlist() {
   const [wishlists, setWishlists] = useState([]);
   const [summary, setSummary] = useState({
-    total: 0,
-    active: 0,
-    achieved: 0,
-    totalTargetPrice: 0,
-    totalSaved: 0,
+    totalItems: 0,
+    activeCount: 0,
+    achievedCount: 0,
+    totalValue: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -26,11 +25,10 @@ export function useWishlist() {
       const data = res.data?.data;
       const list = data?.wishlists ?? [];
       const sum = data?.summary ?? {
-        total: 0,
-        active: 0,
-        achieved: 0,
-        totalTargetPrice: 0,
-        totalSaved: 0,
+        totalItems: 0,
+        activeCount: 0,
+        achievedCount: 0,
+        totalValue: 0,
       };
       setWishlists(list);
       setSummary(sum);
@@ -74,15 +72,14 @@ export function useWishlist() {
     }
   }, []);
 
-  const addWishlistSavings = useCallback(async (id, amount, walletId) => {
+  const markWishlistAchieved = useCallback(async (id) => {
     setIsLoading(true);
     try {
-      const res = await apiAddWishlistSavings(id, amount, walletId);
-      toast.success(res.data.message || "Tabungan berhasil ditambahkan");
+      const res = await apiMarkWishlistAchieved(id);
       return res.data?.data?.wishlist;
     } catch (err) {
-      console.error("[useWishlist] addWishlistSavings error:", err);
-      toast.error(err.response?.data?.message || "Gagal menambahkan tabungan");
+      console.error("[useWishlist] markWishlistAchieved error:", err);
+      toast.error(err.response?.data?.message || "Gagal memperbarui status keinginan");
       return null;
     } finally {
       setIsLoading(false);
@@ -111,7 +108,7 @@ export function useWishlist() {
     getWishlists,
     createWishlist,
     updateWishlist,
-    addWishlistSavings,
+    markWishlistAchieved,
     deleteWishlist,
   };
 }
