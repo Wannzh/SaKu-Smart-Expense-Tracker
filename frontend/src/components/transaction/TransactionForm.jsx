@@ -114,7 +114,7 @@ const TransactionForm = memo(function TransactionForm({
   }, [initialData, categories, selectedCategory]);
 
   const filteredCategories = useMemo(() => {
-    return categories.filter((c) => c.type === form.type);
+    return categories.filter((c) => c.type === form.type && c.id !== "cat-utang" && c.id !== "cat-utang-in");
   }, [categories, form.type]);
 
   const selectedWallet = useMemo(() => {

@@ -54,3 +54,14 @@ export const formatShortDate = (date) => {
 export const toISODate = (date) => {
   return dayjs(date).format("YYYY-MM-DD");
 };
+
+/**
+ * Clean transaction description from references like [Ref: ...]
+ * @param {string} desc
+ * @returns {string}
+ */
+export const cleanDescription = (desc) => {
+  if (!desc) return "";
+  return desc.replace(/\s*\[Ref:\s*[^\]]+\]/g, "");
+};
+

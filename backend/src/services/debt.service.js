@@ -1,6 +1,56 @@
 const prisma = require("../config/prisma");
 const { createError } = require("../utils/response");
 
+const getOrCreateDebtCategory = async (tx, transactionType, action) => {
+  const catId = transactionType === "INCOME" ? "cat-utang-in" : "cat-utang";
+  const catName = "Utang";
+  const catIcon = "HandCoins";
+  const catColor = transactionType === "INCOME" ? "#10B981" : "#EF4444";
+
+  let category = await tx.category.findUnique({ where: { id: catId } });
+  if (!category) {
+    category = await tx.category.create({
+      data: {
+        id: catId,
+        name: catName,
+        icon: catIcon,
+        color: catColor,
+        isDefault: true,
+        type: transactionType,
+      },
+    });
+  }
+
+  let subId = "";
+  let subName = "";
+  if (action === "BORROW") {
+    subId = "sub-utang-pinjaman-diterima";
+    subName = "Pinjaman Diterima";
+  } else if (action === "LEND") {
+    subId = "sub-utang-pinjaman-diberikan";
+    subName = "Pinjaman Diberikan";
+  } else if (action === "PAY") {
+    subId = "sub-utang-bayar-hutang";
+    subName = "Bayar Hutang";
+  } else if (action === "RECEIVE") {
+    subId = "sub-utang-terima-pembayaran";
+    subName = "Terima Pembayaran";
+  }
+
+  let subCategory = await tx.subCategory.findUnique({ where: { id: subId } });
+  if (!subCategory) {
+    subCategory = await tx.subCategory.create({
+      data: {
+        id: subId,
+        name: subName,
+        categoryId: catId,
+      },
+    });
+  }
+
+  return { categoryId: catId, subCategoryId: subId };
+};
+
 /**
  * Get all debts/loans for a user with optional type and status filters.
  * Automatically checks and updates status to OVERDUE if dueDate is past.
@@ -126,6 +176,9 @@ const createDebt = async (userId, { type, personName, amount, notes, borrowDate,
         ? `Pinjam dari ${personName} [Ref: ${debt.id}]`
         : `Pinjamkan ke ${personName} [Ref: ${debt.id}]`;
 
+      const action = type === "DEBT" ? "BORROW" : "LEND";
+      const { categoryId, subCategoryId } = await getOrCreateDebtCategory(tx, transactionType, action);
+
       await tx.transaction.create({
         data: {
           amount: parseAmount,
@@ -134,6 +187,8 @@ const createDebt = async (userId, { type, personName, amount, notes, borrowDate,
           date: borrowDateTime,
           userId,
           walletId,
+          categoryId,
+          subCategoryId,
         },
       });
     }
@@ -242,6 +297,9 @@ const payDebt = async (userId, debtId, { paidAmount, walletId }) => {
         ? `Bayar hutang ke ${existing.personName} [Ref: ${debtId}]`
         : `Terima pembayaran dari ${existing.personName} [Ref: ${debtId}]`;
 
+      const action = existing.type === "DEBT" ? "PAY" : "RECEIVE";
+      const { categoryId, subCategoryId } = await getOrCreateDebtCategory(tx, transactionType, action);
+
       await tx.transaction.create({
         data: {
           amount: paymentAmount,
@@ -250,6 +308,8 @@ const payDebt = async (userId, debtId, { paidAmount, walletId }) => {
           date: new Date(),
           userId,
           walletId: activeWalletId,
+          categoryId,
+          subCategoryId,
         },
       });
     }

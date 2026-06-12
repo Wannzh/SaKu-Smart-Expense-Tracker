@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useBudget } from "../hooks/useBudget";
 import { useCategory } from "../hooks/useCategory";
 import { useTransaction } from "../hooks/useTransaction";
-import { formatCurrency } from "../utils/format";
+import { formatCurrency, cleanDescription } from "../utils/format";
 import * as LucideIcons from "lucide-react";
 import {
   ChevronLeft,
@@ -491,7 +491,7 @@ const BudgetPage = memo(function BudgetPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-bold text-[var(--text-primary)] truncate">
-                            {tx.description || tx.category?.name}
+                            {cleanDescription(tx.description) || tx.category?.name}
                           </p>
                           <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 flex items-center gap-1 font-medium">
                             <Wallet className="h-3 w-3 inline shrink-0" />

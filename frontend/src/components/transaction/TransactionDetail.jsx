@@ -2,7 +2,7 @@ import { memo, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Trash2, Pencil, AlertTriangle } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { formatCurrency } from "../../utils/format";
+import { formatCurrency, cleanDescription } from "../../utils/format";
 import dayjs from "dayjs";
 import clsx from "clsx";
 
@@ -133,7 +133,7 @@ const TransactionDetail = memo(function TransactionDetail({
                   <div className="flex justify-between items-center py-3.5 border-b border-[var(--border-color)]">
                     <span className="text-xs text-[var(--text-secondary)]">Deskripsi</span>
                     <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
-                      {transaction.description || "-"}
+                      {cleanDescription(transaction.description) || "-"}
                     </span>
                   </div>
 
@@ -168,8 +168,8 @@ const TransactionDetail = memo(function TransactionDetail({
                     <span className="text-xs text-[var(--text-secondary)]">Judul</span>
                     <span className="text-xs font-semibold text-[var(--text-primary)] text-right truncate max-w-[65%]">
                       {isWishlist 
-                        ? transaction.description.replace("Tabungan Keinginan: ", "").replace("Tabungan Awal Keinginan: ", "")
-                        : transaction.description || "-"}
+                        ? cleanDescription(transaction.description).replace("Tabungan Keinginan: ", "").replace("Tabungan Awal Keinginan: ", "")
+                        : cleanDescription(transaction.description) || "-"}
                     </span>
                   </div>
 

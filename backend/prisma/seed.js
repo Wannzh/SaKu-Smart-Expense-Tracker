@@ -149,6 +149,16 @@ const categoriesData = [
       "Makanan Hewan", "Dokter Hewan", "Mainan", "Aksesoris", "Perawatan"
     ]
   },
+  {
+    id: "cat-utang",
+    name: "Utang",
+    icon: "HandCoins",
+    color: "#EF4444",
+    type: "EXPENSE",
+    subCategories: [
+      "Bayar Hutang", "Pinjaman Diberikan"
+    ]
+  },
 
   // INCOME CATEGORIES
   {
@@ -199,6 +209,16 @@ const categoriesData = [
     type: "INCOME",
     subCategories: [
       "Pengembalian Dana", "Hibah", "Penjualan Barang"
+    ]
+  },
+  {
+    id: "cat-utang-in",
+    name: "Utang",
+    icon: "HandCoins",
+    color: "#10B981",
+    type: "INCOME",
+    subCategories: [
+      "Pinjaman Diterima", "Terima Pembayaran"
     ]
   }
 ];

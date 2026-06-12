@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { formatCurrency, formatDate } from "../../utils/format";
+import { formatCurrency, formatDate, cleanDescription } from "../../utils/format";
 import { Pencil, Trash2 } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import clsx from "clsx";
@@ -28,7 +28,7 @@ const TransactionCard = memo(function TransactionCard({
     : transaction.category?.color || (isIncome ? "#10B981" : "#EF4444");
 
   const subName = transaction.subCategory?.name;
-  const desc = transaction.description;
+  const desc = cleanDescription(transaction.description);
   const displayDesc = isWishlist
     ? desc.replace("Tabungan Keinginan: ", "").replace("Tabungan Awal Keinginan: ", "")
     : desc;

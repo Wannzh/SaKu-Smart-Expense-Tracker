@@ -6,7 +6,7 @@ import { useTransfer } from "../hooks/useTransfer";
 import { useCategory } from "../hooks/useCategory";
 import { useWallet } from "../hooks/useWallet";
 import WalletPicker from "../components/transaction/WalletPicker";
-import { formatCurrency } from "../utils/format";
+import { formatCurrency, cleanDescription } from "../utils/format";
 import {
   ChevronLeft,
   Calendar,
@@ -268,7 +268,7 @@ const ExportPreview = memo(forwardRef(function ExportPreview({
                         {dayjs(item.date).format("DD/MM/YY")}
                       </td>
                       <td className="py-2 px-3 truncate max-w-[150px]" style={{ color: "#1e293b" }}>
-                        {item.description || "-"}
+                        {cleanDescription(item.description) || "-"}
                       </td>
                       <td className="py-2 px-3" style={{ color: "#334155" }}>{categoryText}</td>
                       <td className="py-2 px-3" style={{ color: "#334155" }}>{walletText}</td>
@@ -523,7 +523,7 @@ const ExportPage = memo(function ExportPage() {
     
     items.forEach((item) => {
       const tanggal = dayjs(item.date).format("DD/MM/YY");
-      const judul = item.description || "";
+      const judul = cleanDescription(item.description) || "";
       
       let kategori = "-";
       let subKategori = "-";
@@ -693,7 +693,7 @@ const ExportPage = memo(function ExportPage() {
         
         return [
           tanggal,
-          item.description || "-",
+          cleanDescription(item.description) || "-",
           isTransfer ? "Transfer" : (item.category?.name || "-"),
           isTransfer ? "-" : (item.subCategory?.name || "-"),
           isTransfer 

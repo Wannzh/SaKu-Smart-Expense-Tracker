@@ -17,7 +17,8 @@ const CategoryPicker = memo(function CategoryPicker({ isOpen, onClose, type, onS
   }, [isOpen, type, getCategories]);
 
   const categories = useMemo(() => {
-    return type === "EXPENSE" ? expenseCategories : incomeCategories;
+    const list = type === "EXPENSE" ? expenseCategories : incomeCategories;
+    return list.filter((c) => c.id !== "cat-utang" && c.id !== "cat-utang-in");
   }, [type, expenseCategories, incomeCategories]);
 
   const handleOverlayClick = (e) => {

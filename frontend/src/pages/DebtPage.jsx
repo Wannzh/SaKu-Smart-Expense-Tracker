@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useDebt } from "../hooks/useDebt";
 import { useWallet } from "../hooks/useWallet";
+import { useTransaction } from "../hooks/useTransaction";
 import { formatCurrency, toISODate } from "../utils/format";
 import * as LucideIcons from "lucide-react";
 import {
@@ -25,6 +26,7 @@ import {
 import dayjs from "dayjs";
 import "dayjs/locale/id";
 import clsx from "clsx";
+import toast from "react-hot-toast";
 import WalletPicker from "../components/transaction/WalletPicker";
 import Modal from "../components/common/Modal";
 import Button from "../components/common/Button";
@@ -48,6 +50,7 @@ const DebtPage = memo(function DebtPage() {
   const navigate = useNavigate();
   const { debts, isLoading, getDebts, createDebt, updateDebt, payDebt, deleteDebt } = useDebt();
   const { wallets, getWallets } = useWallet();
+  const { transactions: allTransactions, getTransactions } = useTransaction();
 
   // Navigation and Tab states
   const [activeTab, setActiveTab] = useState("DEBT"); // DEBT | LOAN
@@ -59,6 +62,7 @@ const DebtPage = memo(function DebtPage() {
   const [isPayOpen, setIsPayOpen] = useState(false);
   const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
   const [isPayWalletPickerOpen, setIsPayWalletPickerOpen] = useState(false);
+  const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
 
   // Form states
   const [form, setForm] = useState({
@@ -66,9 +70,12 @@ const DebtPage = memo(function DebtPage() {
     personName: "",
     amount: "",
     borrowDate: toISODate(new Date()),
-    dueDate: "",
+    borrowTime: dayjs().format("HH:mm"),
+    dueDate: toISODate(new Date()),
+    dueTime: dayjs().format("HH:mm"),
     walletId: "",
     notes: "",
+    currency: "Rp",
   });
 
   const [payForm, setPayForm] = useState({
@@ -76,16 +83,23 @@ const DebtPage = memo(function DebtPage() {
     walletId: "",
   });
 
-  // Fetch debts and wallets on mount
+  // Fetch debts, wallets, and transactions on mount
   useEffect(() => {
     getDebts();
     getWallets();
-  }, [getDebts, getWallets]);
+    getTransactions();
+  }, [getDebts, getWallets, getTransactions]);
 
   // Handle Input Changes
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [name]: value };
+      if (name === "dueDate" && value && !prev.dueTime) {
+        next.dueTime = dayjs().format("HH:mm");
+      }
+      return next;
+    });
   }, []);
 
   const handlePayInputChange = useCallback((e) => {
@@ -133,6 +147,15 @@ const DebtPage = memo(function DebtPage() {
     return debts.filter((d) => d.type === activeTab);
   }, [debts, activeTab]);
 
+  const debtPayments = useMemo(() => {
+    if (!selectedDebt) return [];
+    return allTransactions.filter((t) => 
+      t.description && 
+      t.description.includes(`[Ref: ${selectedDebt.id}]`) &&
+      (t.description.startsWith("Bayar hutang ke") || t.description.startsWith("Terima pembayaran dari"))
+    );
+  }, [allTransactions, selectedDebt]);
+
   const unpaidDebts = useMemo(() => {
     return filteredDebts.filter((d) => d.status !== "PAID");
   }, [filteredDebts]);
@@ -143,14 +166,18 @@ const DebtPage = memo(function DebtPage() {
 
   // Open Add Form Modal
   const handleOpenAdd = useCallback(() => {
+    const now = dayjs();
     setForm({
       type: activeTab,
       personName: "",
       amount: "",
-      borrowDate: toISODate(new Date()),
-      dueDate: "",
+      borrowDate: now.format("YYYY-MM-DD"),
+      borrowTime: now.format("HH:mm"),
+      dueDate: now.format("YYYY-MM-DD"),
+      dueTime: now.format("HH:mm"),
       walletId: wallets[0]?.id || "",
       notes: "",
+      currency: "Rp",
     });
     setIsFormOpen(true);
   }, [activeTab, wallets]);
@@ -158,12 +185,15 @@ const DebtPage = memo(function DebtPage() {
   // Create or Update Debt Submit
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    const borrowDateStr = `${form.borrowDate} ${form.borrowTime || "00:00"}`;
+    const dueDateTimeStr = `${form.dueDate} ${form.dueTime || "00:00"}`;
+
     const payload = {
       type: form.type,
       personName: form.personName,
       amount: parseFloat(form.amount),
-      borrowDate: dayjs(form.borrowDate).toISOString(),
-      dueDate: form.dueDate ? dayjs(form.dueDate).toISOString() : null,
+      borrowDate: dayjs(borrowDateStr).toISOString(),
+      dueDate: dayjs(dueDateTimeStr).toISOString(),
       walletId: form.walletId || null,
       notes: form.notes || null,
     };
@@ -229,29 +259,6 @@ const DebtPage = memo(function DebtPage() {
     }
   };
 
-  const getStatusBadge = (debt) => {
-    if (debt.status === "PAID") {
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50">
-          Lunas
-        </span>
-      );
-    }
-    if (debt.status === "OVERDUE") {
-      const days = Math.max(1, dayjs().diff(dayjs(debt.dueDate), "day"));
-      return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 dark:bg-red-950/30 dark:text-red-400 border border-red-200/50">
-          Terlambat {days} hari
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400 border border-indigo-200/50">
-        Berjalan
-      </span>
-    );
-  };
-
   const selectedWalletName = useMemo(() => {
     return wallets.find((w) => w.id === form.walletId)?.name || "Pilih Dompet...";
   }, [wallets, form.walletId]);
@@ -279,36 +286,58 @@ const DebtPage = memo(function DebtPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
             {/* Avatar Circle */}
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 text-xs font-black select-none">
-              {getInitials(item.personName)}
-            </div>
+            {(() => {
+              if (isPaid) {
+                return (
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-500 select-none">
+                    <CheckCircle className="h-5 w-5" />
+                  </div>
+                );
+              }
+              if (item.type === "DEBT") {
+                return (
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-500/10 text-red-500 select-none">
+                    <ArrowDown className="h-5 w-5" />
+                  </div>
+                );
+              }
+              return (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-500 select-none">
+                  <ArrowUp className="h-5 w-5" />
+                </div>
+              );
+            })()}
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h4 className="text-sm font-semibold text-[var(--text-primary)] truncate">
                   {item.personName}
                 </h4>
-                {getStatusBadge(item)}
               </div>
               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[10px] text-[var(--text-tertiary)] font-semibold mt-1">
-                {isPaid ? (
-                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <Calendar className="h-3 w-3" />
-                    Lunas
-                  </span>
-                ) : (
-                  <>
+                {(() => {
+                  if (isPaid) {
+                    return (
+                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                        <Calendar className="h-3 w-3" />
+                        Lunas
+                      </span>
+                    );
+                  }
+                  if (item.status === "OVERDUE") {
+                    return (
+                      <span className="flex items-center gap-1 text-red-500">
+                        <LucideIcons.AlertCircle className="h-3 w-3" />
+                        Terlambat
+                      </span>
+                    );
+                  }
+                  return (
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      Pinjam: {dayjs(item.borrowDate).format("D MMM YYYY")}
+                      Jatuh tempo {item.dueDate ? dayjs(item.dueDate).format("D MMM") : "-"}
                     </span>
-                    {item.dueDate && (
-                      <span className="flex items-center gap-1 border-l border-[var(--border-color)]/80 pl-2.5">
-                        <Clock className="h-3 w-3" />
-                        Tempo: {dayjs(item.dueDate).format("D MMM YYYY")}
-                      </span>
-                    )}
-                  </>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -325,17 +354,6 @@ const DebtPage = memo(function DebtPage() {
                 {isPaid ? "Telah dibayar" : "Belum dibayar"}
               </p>
             </div>
-            {!isPaid && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleOpenPay(item);
-                }}
-                className="px-3 py-1.5 text-[10px] font-black uppercase tracking-wider bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-all cursor-pointer select-none active:scale-95 shadow-xs shrink-0"
-              >
-                Bayar
-              </button>
-            )}
             <ChevronRight className="h-4.5 w-4.5 text-[var(--text-tertiary)] group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
@@ -393,60 +411,73 @@ const DebtPage = memo(function DebtPage() {
         </button>
       </div>
 
-      {/* SUMMARY CARD (Gaya Ollo) */}
-      <div className="rounded-3xl p-6 text-white shadow-lg relative overflow-hidden mb-6 select-none bg-gradient-to-br from-indigo-600 via-indigo-600 to-blue-500">
-        {/* Glow circles */}
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+      {/* SUMMARY CARD (Premium Dark Style) */}
+      <div className="rounded-3xl p-6 bg-[var(--card-bg)] border border-[var(--border-color)] shadow-lg relative mb-6 select-none">
+        {/* Top Header Section */}
+        <div className="flex justify-between items-start pb-5">
+          <div className="space-y-1">
+            <span className="text-xs font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">
+              Saldo Bersih
+            </span>
+            <h1 className={clsx(
+              "text-3xl font-black tracking-tight tabular-nums",
+              summary.net > 0 ? "text-sky-400" : summary.net < 0 ? "text-red-500" : "text-[var(--text-primary)]"
+            )}>
+              {summary.net < 0 ? "-" : ""}{formatCurrency(Math.abs(summary.net))}
+            </h1>
+            <div className="pt-1">
+              <span className={clsx(
+                "inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+                summary.net > 0 ? "bg-sky-500/10 text-sky-400" : summary.net < 0 ? "bg-red-500/10 text-red-500" : "bg-gray-500/10 text-gray-400"
+              )}>
+                {summary.net > 0 ? "Surplus piutang" : summary.net < 0 ? "Defisit hutang" : "Seimbang"}
+              </span>
+            </div>
+          </div>
 
-        <div className="flex flex-col items-center justify-center text-center pb-4 border-b border-white/15">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-100">Selisih Saldo Bersih</span>
-          <h1 className="text-3xl font-extrabold tracking-tight mt-1 tabular-nums">
-            {summary.net < 0 ? "-" : ""}{formatCurrency(Math.abs(summary.net))}
-          </h1>
-          <span className="mt-2 text-[10px] font-bold bg-white/20 rounded-full px-3 py-1 uppercase tracking-wider">
-            {summary.statusText}
-          </span>
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]/60">
+            <WalletIcon className="h-5 w-5" />
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="py-4">
-          <div className="flex justify-between text-xs font-black text-indigo-100 mb-1.5 uppercase tracking-wider">
-            <span>Utang: {summary.debtPercent}%</span>
-            <span>Piutang: {summary.loanPercent}%</span>
-          </div>
-          <div className="h-3 w-full bg-white/25 rounded-full overflow-hidden flex">
+        {/* Progress Bar (Hutang vs Piutang) */}
+        <div className="py-2 border-t border-[var(--border-color)]/30">
+          <div className="h-2.5 w-full bg-[var(--bg-tertiary)] rounded-full overflow-hidden flex my-2">
             <div
               style={{ width: `${summary.debtPercent}%` }}
-              className="h-full bg-red-400 transition-all duration-500 ease-out"
+              className="h-full bg-red-500 transition-all duration-500 ease-out"
             />
             <div
               style={{ width: `${summary.loanPercent}%` }}
-              className="h-full bg-sky-300 transition-all duration-500 ease-out"
+              className="h-full bg-sky-400 transition-all duration-500 ease-out"
             />
+          </div>
+          <div className="flex justify-between text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
+            <span>Hutang Saya {summary.debtPercent}%</span>
+            <span>Piutang Saya {summary.loanPercent}%</span>
           </div>
         </div>
 
-        {/* Mini Cards Container */}
-        <div className="grid grid-cols-2 gap-4 mt-2 pt-2">
-          <div className="bg-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-500/20 text-red-300">
-              <ArrowDown className="h-4.5 w-4.5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-extrabold text-indigo-100 tracking-wider">Utang Saya</p>
-              <p className="text-sm font-extrabold truncate mt-0.5 tabular-nums">{formatCurrency(summary.totalDebt)}</p>
-            </div>
+        {/* Mini Cards Container (Grid Cols 2) */}
+        <div className="grid grid-cols-2 gap-4 mt-4 pt-2 border-t border-[var(--border-color)]/30">
+          {/* Card Hutang Saya */}
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)]/60 rounded-2xl p-4 flex flex-col gap-1.5">
+            <span className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] tracking-wider">
+              Hutang Saya
+            </span>
+            <p className="text-base font-black text-[var(--text-primary)] tabular-nums">
+              {formatCurrency(summary.totalDebt)}
+            </p>
           </div>
 
-          <div className="bg-white/10 rounded-2xl p-3.5 flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 text-sky-200">
-              <ArrowUp className="h-4.5 w-4.5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-extrabold text-indigo-100 tracking-wider">Piutang Saya</p>
-              <p className="text-sm font-extrabold truncate mt-0.5 tabular-nums">{formatCurrency(summary.totalLoan)}</p>
-            </div>
+          {/* Card Piutang Saya */}
+          <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)]/60 rounded-2xl p-4 flex flex-col gap-1.5">
+            <span className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] tracking-wider">
+              Piutang Saya
+            </span>
+            <p className="text-base font-black text-[var(--text-primary)] tabular-nums">
+              {formatCurrency(summary.totalLoan)}
+            </p>
           </div>
         </div>
       </div>
@@ -580,7 +611,7 @@ const DebtPage = memo(function DebtPage() {
             </button>
           </div>
 
-          {/* Person Name Input */}
+          {/* 1. Nama Orang */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
               Nama Kontak / Orang
@@ -601,56 +632,158 @@ const DebtPage = memo(function DebtPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Amount */}
-            <Input
-              label="Jumlah Nominal (Rp)"
-              type="number"
-              name="amount"
-              required
-              value={form.amount}
-              onChange={handleInputChange}
-              placeholder="0"
-            />
+          {/* 2. Jumlah */}
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
+              Jumlah
+            </label>
+            <div className="flex items-center gap-3">
+              {/* Currency Selector */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
+                  className="flex items-center gap-1.5 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-sm font-extrabold text-[var(--text-primary)] hover:border-indigo-500 transition-all cursor-pointer select-none"
+                >
+                  <span>{form.currency || "Rp"}</span>
+                  <ChevronRight className="h-4 w-4 text-[var(--text-tertiary)] rotate-90" />
+                </button>
 
-            {/* Wallet Selector */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
-                Dompet/Wallet
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsWalletPickerOpen(true)}
-                className="w-full flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 py-3 bg-[var(--bg-secondary)] hover:border-indigo-500 text-left text-sm text-[var(--text-primary)] cursor-pointer transition-all placeholder-[var(--text-tertiary)]"
-              >
-                <span className="truncate">{selectedWalletName}</span>
-                <WalletIcon className="h-4.5 w-4.5 text-[var(--text-tertiary)] shrink-0" />
-              </button>
+                {isCurrencyDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setIsCurrencyDropdownOpen(false)}
+                    />
+                    <div className="absolute left-0 mt-1.5 w-24 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-50 overflow-hidden py-1">
+                      {["Rp", "$", "€", "£", "¥", "SGD"].map((curr) => (
+                        <button
+                          key={curr}
+                          type="button"
+                          onClick={() => {
+                            if (curr !== "Rp") {
+                              toast.error("Fitur mata uang selain Rp masih dalam tahap Pengembangan");
+                              return;
+                            }
+                            setForm((prev) => ({ ...prev, currency: curr }));
+                            setIsCurrencyDropdownOpen(false);
+                          }}
+                          className={clsx(
+                            "w-full text-left px-4 py-2 text-xs font-bold hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer",
+                            form.currency === curr ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/5" : "text-[var(--text-primary)]"
+                          )}
+                        >
+                          {curr}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Amount Input */}
+              <input
+                type="number"
+                name="amount"
+                required
+                value={form.amount}
+                onChange={handleInputChange}
+                placeholder="0"
+                className="flex-1 rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all placeholder-[var(--text-tertiary)] font-bold"
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Borrow Date */}
-            <Input
-              label="Tanggal Pinjam"
-              type="date"
-              name="borrowDate"
-              required
-              value={form.borrowDate}
-              onChange={handleInputChange}
-            />
-
-            {/* Due Date */}
-            <Input
-              label="Jatuh Tempo (Opsional)"
-              type="date"
-              name="dueDate"
-              value={form.dueDate}
-              onChange={handleInputChange}
-            />
+          {/* 3. Jatuh Tempo - Jam */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
+              Jatuh Tempo
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Date */}
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none">
+                  <Calendar className="h-4.5 w-4.5" />
+                </span>
+                <input
+                  type="date"
+                  name="dueDate"
+                  required
+                  value={form.dueDate}
+                  onChange={handleInputChange}
+                  className="w-full rounded-xl border border-[var(--border-color)] pl-10 pr-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                />
+              </div>
+              {/* Time */}
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none">
+                  <Clock className="h-4.5 w-4.5" />
+                </span>
+                <input
+                  type="time"
+                  name="dueTime"
+                  required
+                  value={form.dueTime}
+                  onChange={handleInputChange}
+                  className="w-full rounded-xl border border-[var(--border-color)] pl-10 pr-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Notes */}
+          {/* 4. Tanggal Pinjam - Jam */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
+              Tanggal Pinjam
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Date */}
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none">
+                  <Calendar className="h-4.5 w-4.5" />
+                </span>
+                <input
+                  type="date"
+                  name="borrowDate"
+                  required
+                  value={form.borrowDate}
+                  onChange={handleInputChange}
+                  className="w-full rounded-xl border border-[var(--border-color)] pl-10 pr-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                />
+              </div>
+              {/* Time */}
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] pointer-events-none">
+                  <Clock className="h-4.5 w-4.5" />
+                </span>
+                <input
+                  type="time"
+                  name="borrowTime"
+                  required
+                  value={form.borrowTime}
+                  onChange={handleInputChange}
+                  className="w-full rounded-xl border border-[var(--border-color)] pl-10 pr-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all cursor-pointer font-medium"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Dompet */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
+              Dompet/Wallet
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsWalletPickerOpen(true)}
+              className="w-full flex items-center justify-between rounded-xl border border-[var(--border-color)] px-4 py-3 bg-[var(--bg-secondary)] hover:border-indigo-500 text-left text-sm text-[var(--text-primary)] cursor-pointer transition-all placeholder-[var(--text-tertiary)]"
+            >
+              <span className="truncate">{selectedWalletName}</span>
+              <WalletIcon className="h-4.5 w-4.5 text-[var(--text-tertiary)] shrink-0" />
+            </button>
+          </div>
+
+          {/* 6. Catatan */}
           <div className="space-y-1">
             <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
               Catatan / Detail Toko
@@ -693,100 +826,187 @@ const DebtPage = memo(function DebtPage() {
         title={selectedTabTitle(selectedDebt?.type)}
       >
         {selectedDebt && (
-          <div className="space-y-5">
-            <div className="text-center pb-4 border-b border-[var(--border-color)]/60 relative">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 text-sm font-black mx-auto mb-3 select-none">
-                {getInitials(selectedDebt.personName)}
-              </div>
-              <h2 className="text-lg font-black text-[var(--text-primary)] truncate px-6">
-                {selectedDebt.personName}
-              </h2>
-              <div className="mt-2 flex items-center justify-center gap-2">
-                {getStatusBadge(selectedDebt)}
-              </div>
-            </div>
+          <div className="space-y-6">
+            {/* 1. Card Informasi */}
+            {(() => {
+              const remaining = Number(selectedDebt.amount) - Number(selectedDebt.paidAmount);
+              const paidPercent = Number(selectedDebt.amount) > 0 
+                ? Math.round((Number(selectedDebt.paidAmount) / Number(selectedDebt.amount)) * 100) 
+                : 0;
+              const isDebt = selectedDebt.type === "DEBT";
+              
+              return (
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)]/60 rounded-3xl p-6 flex flex-col items-center text-center relative overflow-hidden">
+                  {/* Arrow Icon */}
+                  <div className={clsx(
+                    "flex h-14 w-14 items-center justify-center rounded-full mb-3",
+                    isDebt ? "bg-red-500/10 text-red-500" : "bg-sky-500/10 text-sky-400"
+                  )}>
+                    {isDebt ? (
+                      <ArrowDown className="h-6 w-6" />
+                    ) : (
+                      <ArrowUp className="h-6 w-6" />
+                    )}
+                  </div>
+                  
+                  {/* Label */}
+                  <p className="text-xs text-[var(--text-tertiary)] font-semibold mb-1">
+                    {isDebt 
+                      ? `Anda berhutang pada ${selectedDebt.personName}`
+                      : `${selectedDebt.personName} berhutang pada Anda`
+                    }
+                  </p>
+                  
+                  {/* Amount (Big Text) */}
+                  <h1 className={clsx(
+                    "text-3xl font-black tracking-tight mb-1 tabular-nums",
+                    isDebt ? "text-red-500" : "text-sky-400"
+                  )}>
+                    {formatCurrency(remaining)}
+                  </h1>
+                  
+                  {/* Original Total Amount */}
+                  <p className="text-[10px] text-[var(--text-tertiary)] font-bold mb-5">
+                    Total: {formatCurrency(selectedDebt.amount)}
+                  </p>
+                  
+                  {/* Progress Bar Container */}
+                  <div className="w-full space-y-1.5">
+                    <div className="h-2 w-full bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                      <div
+                        className={clsx(
+                          "h-full rounded-full transition-all duration-300",
+                          isDebt ? "bg-red-500" : "bg-sky-400"
+                        )}
+                        style={{ width: `${paidPercent}%` }}
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider select-none">
+                      <span>Terbayar: {formatCurrency(selectedDebt.paidAmount)}</span>
+                      <span>{paidPercent}%</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
-            {/* Financial Details */}
-            <div className="space-y-3 bg-[var(--bg-secondary)] rounded-2xl p-4 border border-[var(--border-color)]/60">
+            {/* 2. Card Details */}
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)]/60 rounded-2xl p-4 space-y-3.5 divide-y divide-[var(--border-color)]/30">
+              {/* Row 1: Jatuh Tempo */}
               <div className="flex justify-between items-center text-xs">
-                <span className="text-[var(--text-tertiary)] font-bold uppercase tracking-wider select-none">Nominal Pinjaman</span>
-                <span className="font-extrabold text-[var(--text-primary)] tabular-nums">{formatCurrency(selectedDebt.amount)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs border-t border-[var(--border-color)]/40 pt-2.5">
-                <span className="text-[var(--text-tertiary)] font-bold uppercase tracking-wider select-none">Telah Dibayar</span>
-                <span className="font-extrabold text-emerald-600 tabular-nums">{formatCurrency(selectedDebt.paidAmount)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs border-t border-[var(--border-color)]/45 pt-2.5">
-                <span className="text-[var(--text-tertiary)] font-bold uppercase tracking-wider select-none">Sisa Pelunasan</span>
-                <span className="font-extrabold text-red-500 tabular-nums">
-                  {formatCurrency(Number(selectedDebt.amount) - Number(selectedDebt.paidAmount))}
+                <div className="flex items-center gap-2.5 text-[var(--text-secondary)] font-semibold select-none">
+                  <Calendar className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
+                  <span>Jatuh Tempo</span>
+                </div>
+                <span className="font-extrabold text-[var(--text-primary)]">
+                  {selectedDebt.dueDate ? dayjs(selectedDebt.dueDate).format("D MMM YYYY") : "-"}
                 </span>
               </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="space-y-1.5 select-none">
-              <div className="flex justify-between text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">
-                <span>Progress Pelunasan</span>
-                <span>
-                  {Math.round((Number(selectedDebt.paidAmount) / Number(selectedDebt.amount)) * 100)}%
+              {/* Row 2: Tanggal Pinjam */}
+              <div className="flex justify-between items-center text-xs pt-3.5">
+                <div className="flex items-center gap-2.5 text-[var(--text-secondary)] font-semibold select-none">
+                  <Calendar className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
+                  <span>Tanggal Pinjam</span>
+                </div>
+                <span className="font-extrabold text-[var(--text-primary)]">
+                  {dayjs(selectedDebt.borrowDate).format("D MMM YYYY")}
                 </span>
               </div>
-              <div className="h-2.5 w-full bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                <div
-                  style={{
-                    width: `${Math.round((Number(selectedDebt.paidAmount) / Number(selectedDebt.amount)) * 100)}%`,
-                  }}
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-300"
-                />
-              </div>
-            </div>
 
-            {/* Metadatas */}
-            <div className="space-y-3.5 text-xs border-t border-[var(--border-color)]/40 pt-4">
-              <div className="flex items-center gap-3">
-                <Calendar className="h-4 w-4 text-[var(--text-tertiary)] shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-[9px] uppercase font-extrabold text-[var(--text-tertiary)] tracking-wider select-none">Tanggal Pinjam</p>
-                  <p className="font-bold text-[var(--text-primary)] mt-0.5">{dayjs(selectedDebt.borrowDate).format("D MMMM YYYY")}</p>
+              {/* Row 3: Status */}
+              <div className="flex justify-between items-center text-xs pt-3.5">
+                <div className="flex items-center gap-2.5 text-[var(--text-secondary)] font-semibold select-none">
+                  <LucideIcons.Info className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
+                  <span>Status</span>
                 </div>
+                <span className={clsx(
+                  "font-extrabold uppercase tracking-wider text-[10px]",
+                  selectedDebt.status === "PAID" && "text-emerald-500",
+                  selectedDebt.status === "OVERDUE" && "text-red-500",
+                  selectedDebt.status === "ACTIVE" && "text-sky-400"
+                )}>
+                  {selectedDebt.status === "PAID" && "Lunas"}
+                  {selectedDebt.status === "OVERDUE" && "Terlambat"}
+                  {selectedDebt.status === "ACTIVE" && "Aktif"}
+                </span>
               </div>
 
-              {selectedDebt.dueDate && (
-                <div className="flex items-center gap-3">
-                  <Clock className="h-4 w-4 text-[var(--text-tertiary)] shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase font-extrabold text-[var(--text-tertiary)] tracking-wider select-none">Batas Jatuh Tempo</p>
-                    <p className="font-bold text-[var(--text-primary)] mt-0.5">{dayjs(selectedDebt.dueDate).format("D MMMM YYYY")}</p>
-                  </div>
-                </div>
-              )}
-
+              {/* Row 4: Alokasi Dompet */}
               {selectedDebt.wallet && (
-                <div className="flex items-center gap-3">
-                  <WalletIcon className="h-4 w-4 text-[var(--text-tertiary)] shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase font-extrabold text-[var(--text-tertiary)] tracking-wider select-none">Alokasi Dompet</p>
-                    <p className="font-bold text-[var(--text-primary)] mt-0.5">{selectedDebt.wallet.name}</p>
+                <div className="flex justify-between items-center text-xs pt-3.5">
+                  <div className="flex items-center gap-2.5 text-[var(--text-secondary)] font-semibold select-none">
+                    <WalletIcon className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
+                    <span>Dompet Rekening</span>
                   </div>
+                  <span className="font-extrabold text-[var(--text-primary)]">
+                    {selectedDebt.wallet.name}
+                  </span>
                 </div>
               )}
 
+              {/* Row 5: Catatan */}
               {selectedDebt.notes && (
-                <div className="flex items-start gap-3">
-                  <FileText className="h-4 w-4 text-[var(--text-tertiary)] shrink-0 mt-0.5" />
-                  <div className="min-w-0">
-                    <p className="text-[9px] uppercase font-extrabold text-[var(--text-tertiary)] tracking-wider select-none">Catatan Tambahan</p>
-                    <p className="font-medium text-[var(--text-secondary)] mt-0.5 break-words whitespace-pre-wrap leading-relaxed">
-                      {selectedDebt.notes}
-                    </p>
+                <div className="flex flex-col gap-1 text-xs pt-3.5">
+                  <div className="flex items-center gap-2.5 text-[var(--text-secondary)] font-semibold select-none">
+                    <FileText className="h-4.5 w-4.5 text-[var(--text-tertiary)]" />
+                    <span>Catatan Tambahan</span>
                   </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] font-medium bg-[var(--bg-tertiary)] p-2.5 rounded-xl mt-1 border border-[var(--border-color)]/30 break-words whitespace-pre-wrap leading-relaxed">
+                    {selectedDebt.notes}
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-2.5 pt-4 border-t border-[var(--border-color)]/60">
+            {/* 3. Riwayat Pembayaran */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                Riwayat Pembayaran
+              </h3>
+              {debtPayments.length === 0 ? (
+                <p className="text-xs text-[var(--text-tertiary)] text-center py-4 font-medium select-none">
+                  Belum ada pembayaran
+                </p>
+              ) : (
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                  {debtPayments.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] border border-[var(--border-color)]/60 rounded-xl hover:bg-[var(--bg-tertiary)] transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-500">
+                          <Check className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[var(--text-primary)]">Cicilan Terbayar</p>
+                          <p className="text-[10px] text-[var(--text-tertiary)] font-semibold">
+                            {dayjs(p.date || p.createdAt).format("D MMM YYYY - HH:mm")}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-xs font-extrabold text-emerald-500 tabular-nums shrink-0">
+                        + {formatCurrency(p.amount)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedDebt.status !== "PAID" && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenPay(selectedDebt)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)] rounded-xl text-xs font-bold transition-all cursor-pointer border border-[var(--border-color)]/50 active:scale-95 shadow-xs"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Catat Pembayaran
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer / Delete Action */}
+            <div className="flex gap-3 pt-4 border-t border-[var(--border-color)]/60">
               <Button
                 type="button"
                 variant="secondary"
@@ -794,18 +1014,15 @@ const DebtPage = memo(function DebtPage() {
                 className="flex-1 py-2 text-xs font-bold border-red-500/20 hover:bg-red-500/10 text-red-500"
               >
                 <Trash2 className="h-4 w-4" />
-                Hapus
+                Hapus Catatan
               </Button>
-              {selectedDebt.status !== "PAID" && (
-                <Button
-                  type="button"
-                  onClick={() => handleOpenPay(selectedDebt)}
-                  className="flex-1 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  <Coins className="h-4 w-4" />
-                  Lunasi
-                </Button>
-              )}
+              <Button
+                type="button"
+                onClick={() => setIsDetailOpen(false)}
+                className="flex-1 py-2 text-xs font-bold bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)] text-[var(--text-primary)]"
+              >
+                Tutup
+              </Button>
             </div>
           </div>
         )}
