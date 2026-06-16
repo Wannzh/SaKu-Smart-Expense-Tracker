@@ -340,7 +340,7 @@ const StepDone = memo(function StepDone({ user, walletBalance }) {
 const OnboardingPage = memo(function OnboardingPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { createWallet } = useWallet();
+  const { createWallet, deleteWallet } = useWallet();
   const { theme, resolvedTheme, cardStyle, setTheme, setCardStyle } = useTheme();
 
   const [step, setStep] = useState(0);
@@ -354,6 +354,8 @@ const OnboardingPage = memo(function OnboardingPage() {
   } = useMoneyInput(0);
 
   const [walletBalance, setWalletBalance] = useState(0);
+  const [createdWalletId, setCreatedWalletId] = useState(null);
+  const [createdWalletBalance, setCreatedWalletBalance] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Use CSS vars only on step 5 (theme picker) and onwards, hardcoded light elsewhere
@@ -372,16 +374,37 @@ const OnboardingPage = memo(function OnboardingPage() {
     if (isProcessing) return;
     // Step 4 (index 3) — create wallet
     if (step === 3) {
+      const bal = walletAmountVal;
+
+      // If already created and balance has not changed, just proceed
+      if (createdWalletId && createdWalletBalance === bal) {
+        setStep((s) => s + 1);
+        return;
+      }
+
       setIsProcessing(true);
       try {
-        const bal = walletAmountVal;
-        await createWallet({
+        // If a wallet was already created but balance changed, delete it first
+        if (createdWalletId) {
+          try {
+            await deleteWallet(createdWalletId);
+          } catch (err) {
+            console.error("Failed to delete outdated onboarding wallet:", err);
+          }
+        }
+
+        const wallet = await createWallet({
           name: "Cash",
           type: "cash",
           initialBalance: bal,
           icon: "cash",
           color: "#4F46E5",
         });
+
+        if (wallet?.id) {
+          setCreatedWalletId(wallet.id);
+          setCreatedWalletBalance(bal);
+        }
         setWalletBalance(bal);
         setStep((s) => s + 1);
       } catch {
@@ -403,7 +426,7 @@ const OnboardingPage = memo(function OnboardingPage() {
     }
 
     setStep((s) => s + 1);
-  }, [step, walletAmountVal, createWallet, navigate, isProcessing]);
+  }, [step, walletAmountVal, createWallet, deleteWallet, navigate, isProcessing, createdWalletId, createdWalletBalance]);
 
   const handleBack = useCallback(() => {
     setStep((s) => Math.max(0, s - 1));
