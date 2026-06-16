@@ -316,7 +316,7 @@ const WalletPage = memo(function WalletPage() {
                           <div>
                             <p className="text-[10px] text-[var(--text-tertiary)] mb-0.5">Saldo</p>
                             <p className="text-lg font-bold text-[var(--text-primary)] tabular-nums">
-                              {formatCurrency(w.balance || 0)}
+                              {showBalance ? formatCurrency(w.balance || 0) : "••••••••"}
                             </p>
                           </div>
                           {isSelected ? (
