@@ -32,13 +32,13 @@ const StepWelcome = memo(function StepWelcome({ user }) {
 
   return (
     <div className="flex flex-col items-center text-center">
-      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-indigo-100 text-3xl font-bold text-indigo-600 mb-6 shadow-md">
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-950/40 text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-6 shadow-md">
         {initial}
       </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
+      <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
         Halo, {user?.name?.split(" ")[0] || "User"}! 👋
       </h2>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-[var(--text-secondary)] mb-4">
         Perjalanan finansialmu dimulai dari sini
       </p>
       <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/40 px-4 py-2 rounded-full">
@@ -59,8 +59,8 @@ const StepCurrency = memo(function StepCurrency({ selectedCurrency, setSelectedC
 
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Pilih Mata Uang</h2>
-      <p className="text-sm text-gray-400 mb-6 text-center">Default untuk semua transaksi</p>
+      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 text-center">Pilih Mata Uang</h2>
+      <p className="text-sm text-[var(--text-tertiary)] mb-6 text-center">Default untuk semua transaksi</p>
 
       <div className="w-full flex flex-col gap-3">
         {currencies.map((currency) => {
@@ -118,7 +118,7 @@ const StepCurrency = memo(function StepCurrency({ selectedCurrency, setSelectedC
         })}
       </div>
 
-      <p className="text-xs text-gray-400 mt-6 text-center italic">
+      <p className="text-xs text-[var(--text-tertiary)] mt-6 text-center italic">
         Bisa diubah kapan saja di Pengaturan
       </p>
     </div>
@@ -129,25 +129,25 @@ const StepCurrency = memo(function StepCurrency({ selectedCurrency, setSelectedC
 const StepNotification = memo(function StepNotification({ enabled, onToggle }) {
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Notifikasi Pintar</h2>
-      <p className="text-sm text-gray-400 mb-6 text-center">Pengingat harian untuk mencatat pengeluaran</p>
+      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 text-center">Notifikasi Pintar</h2>
+      <p className="text-sm text-[var(--text-tertiary)] mb-6 text-center">Pengingat harian untuk mencatat pengeluaran</p>
 
-      <div className="w-full rounded-2xl bg-white border border-gray-200 p-5 flex items-center gap-4 shadow-sm">
+      <div className="w-full rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-5 flex items-center gap-4 shadow-sm">
         <div className={clsx(
           "flex h-12 w-12 items-center justify-center rounded-xl shrink-0 transition-colors",
-          enabled ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400"
+          enabled ? "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400" : "bg-[var(--bg-secondary)] text-[var(--text-tertiary)]"
         )}>
           {enabled ? <Bell className="h-6 w-6" /> : <BellOff className="h-6 w-6" />}
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-gray-800">Pengingat Harian</p>
-          <p className="text-xs text-gray-400">Ingatkan untuk catat pengeluaran setiap hari</p>
+          <p className="text-sm font-bold text-[var(--text-primary)]">Pengingat Harian</p>
+          <p className="text-xs text-[var(--text-secondary)]">Ingatkan untuk catat pengeluaran setiap hari</p>
         </div>
         {/* Toggle */}
         <button onClick={onToggle}
           className={clsx(
             "relative h-7 w-12 rounded-full transition-colors cursor-pointer",
-            enabled ? "bg-indigo-600" : "bg-gray-300"
+            enabled ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-700"
           )}>
           <div className={clsx(
             "absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform",
@@ -156,7 +156,7 @@ const StepNotification = memo(function StepNotification({ enabled, onToggle }) {
         </button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-4 text-center">
+      <p className="text-xs text-[var(--text-tertiary)] mt-4 text-center">
         {enabled ? "✅ Notifikasi akan aktif" : "Kamu tetap bisa mengaktifkan nanti"}
       </p>
     </div>
@@ -167,35 +167,35 @@ const StepNotification = memo(function StepNotification({ enabled, onToggle }) {
 const StepWallet = memo(function StepWallet({ amount, onAmountChange }) {
   return (
     <div className="flex flex-col items-center">
-      <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Dompet Pertama</h2>
-      <p className="text-sm text-gray-400 mb-6 text-center">Masukkan jumlah uang tunai yang kamu pegang saat ini</p>
+      <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 text-center">Dompet Pertama</h2>
+      <p className="text-sm text-[var(--text-tertiary)] mb-6 text-center">Masukkan jumlah uang tunai yang kamu pegang saat ini</p>
 
-      <div className="w-full rounded-2xl bg-white border border-gray-200 p-5 shadow-sm mb-4">
+      <div className="w-full rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] p-5 shadow-sm mb-4">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50">
-            <Banknote className="h-5 w-5 text-indigo-600" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/40">
+            <Banknote className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-800">Cash</p>
-            <p className="text-xs text-gray-400">Uang tunai</p>
+            <p className="text-sm font-bold text-[var(--text-primary)]">Cash</p>
+            <p className="text-xs text-[var(--text-secondary)]">Uang tunai</p>
           </div>
         </div>
 
         {/* Amount input */}
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 pointer-events-none select-none">Rp</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-secondary)] pointer-events-none select-none">Rp</span>
           <input
             type="text"
             inputMode="numeric"
             value={amount}
             onChange={onAmountChange}
             placeholder="0"
-            className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all text-lg"
+            className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all text-lg"
           />
         </div>
       </div>
 
-      <p className="text-xs text-gray-400 text-center">
+      <p className="text-xs text-[var(--text-tertiary)] text-center">
         Kamu bisa menambah dompet lain (Bank, E-Wallet) nanti di menu Wallet
       </p>
     </div>
@@ -416,19 +416,11 @@ const OnboardingPage = memo(function OnboardingPage() {
   }, [step, isProcessing]);
 
   return (
-    <div className={clsx(
-      "fixed inset-0 flex flex-col",
-      isThemeStep ? "bg-[var(--bg-primary)]" : "bg-[#F0F2F5]"
-    )}>
+    <div className="fixed inset-0 flex flex-col bg-[var(--bg-primary)]">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         {step > 0 ? (
-          <button onClick={handleBack} className={clsx(
-            "flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer",
-            isThemeStep
-              ? "text-[var(--text-tertiary)] hover:bg-[var(--card-bg)] hover:text-[var(--text-secondary)]"
-              : "text-gray-400 hover:bg-white hover:text-gray-600"
-          )}>
+          <button onClick={handleBack} className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer text-[var(--text-tertiary)] hover:bg-[var(--card-bg)] hover:text-[var(--text-secondary)]">
             <ChevronLeft className="h-5 w-5" />
           </button>
         ) : (
@@ -440,7 +432,7 @@ const OnboardingPage = memo(function OnboardingPage() {
           {Array.from({ length: TOTAL_STEPS }, (_, i) => (
             <div key={i} className={clsx(
               "h-1.5 rounded-full transition-all duration-300",
-              i === step ? "w-7 bg-indigo-600" : i < step ? "w-4 bg-indigo-300" : "w-4 bg-gray-300"
+              i === step ? "w-7 bg-indigo-600" : i < step ? "w-4 bg-indigo-300 dark:bg-indigo-900" : "w-4 bg-gray-300 dark:bg-gray-700"
             )} />
           ))}
         </div>
