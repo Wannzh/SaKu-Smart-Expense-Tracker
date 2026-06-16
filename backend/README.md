@@ -1,16 +1,25 @@
-# ⚙️ SaKu - Backend API Server
+# ⚙️ SaKu — Backend API Server
 
-Bagian ini berisi kode sumber API server-side **SaKu (Smart Expense Tracker)**. Dibangun menggunakan **Express.js** dengan database relasional **PostgreSQL**, skema ORM **Prisma**, dan terintegrasi dengan **Google Gemini AI** untuk analisis finansial tingkat lanjut.
+> Bagian dari monorepo [SaKu - Smart Expense Tracker](../README.md)
+
+Kode sumber API server-side **SaKu**. Dibangun menggunakan **Express.js 5** dengan database relasional **PostgreSQL**, skema ORM **Prisma**, dan terintegrasi dengan **Google Gemini AI** untuk analisis finansial tingkat lanjut serta pemindaian struk berbasis OCR multimodal.
 
 ---
 
 ## 🛠️ Tech Stack & Dependensi Utama
 
-*   **Runtime & Server Framework**: Node.js, Express.js (Express 5)
-*   **Database ORM & Driver**: Prisma ORM, PostgreSQL Driver (`pg`)
-*   **Authentication & Security**: Argon2 (untuk hashing password), JSON Web Token (JWT), Cookie-parser (untuk otentikasi aman berbasis HttpOnly Cookie)
-*   **AI Engine**: Google Gemini API SDK (`@google/generative-ai`)
-*   **Media Uploads**: Multer & Cloudinary SDK (untuk mengunggah berkas foto nota/struk secara aman ke cloud storage)
+| Paket | Kegunaan |
+|-------|----------|
+| Node.js (v20) | JavaScript runtime |
+| Express.js (v5) | REST API framework |
+| Prisma ORM | Database schema, migrations & type-safe queries |
+| PostgreSQL | Relational database |
+| Argon2 | Hashing password yang aman |
+| JSON Web Token (JWT) | Pembuatan & verifikasi token auth |
+| Cookie-parser | Autentikasi berbasis HttpOnly Cookie |
+| Multer | Middleware upload file multipart/form-data |
+| Cloudinary SDK | Penyimpanan media foto struk ke cloud |
+| Google Gemini AI SDK | Asisten AI finansial & OCR nota/struk |
 
 ---
 
@@ -19,17 +28,17 @@ Bagian ini berisi kode sumber API server-side **SaKu (Smart Expense Tracker)**. 
 ```
 backend/
 ├── prisma/
-│   ├── migrations/      # Riwayat berkas migrasi database PostgreSQL
-│   ├── schema.prisma    # Definisi skema tabel database (Prisma Schema)
-│   └── seed.js          # Skrip seeder untuk mengisi data awal kategori transaksi
+│   ├── migrations/      # Riwayat migrasi skema database
+│   ├── schema.prisma    # Definisi model & relasi tabel (sumber kebenaran)
+│   └── seed.js          # Seeder data awal (kategori transaksi default)
 ├── src/
-│   ├── controllers/     # Logika pemrosesan permintaan API (request & response)
-│   ├── middlewares/     # Middleware keamanan (auth guard, upload handler, error handling)
-│   ├── routes/          # Definisi rute URL API Express
-│   ├── services/        # Logika bisnis inti (Gemini AI, Cloudinary upload, Prisma queries)
-│   ├── utils/           # Fungsi helper (JWT token generator, format, dll.)
-│   └── app.js           # Entrypoint inisialisasi aplikasi Express
-├── Dockerfile           # Konfigurasi multi-stage build backend Docker
+│   ├── controllers/     # Handler permintaan HTTP (request → response)
+│   ├── middlewares/     # Auth guard, upload handler, error handler global
+│   ├── routes/          # Definisi endpoint URL REST API Express
+│   ├── services/        # Logika bisnis inti (Gemini AI, Cloudinary, Prisma)
+│   ├── utils/           # Helper (JWT generator, formatter, dll.)
+│   └── app.js           # Inisialisasi aplikasi Express & middleware stack
+├── Dockerfile           # Konfigurasi Docker (Node 20 + pnpm + prisma generate)
 └── package.json         # Dependensi & skrip pnpm backend
 ```
 
@@ -39,46 +48,57 @@ backend/
 
 Buat file `.env` di dalam folder ini berdasarkan template `.env.example`:
 
-*   `PORT`: Port lokal tempat API berjalan (default: `5001`).
-*   `DATABASE_URL`: URI koneksi database PostgreSQL utama (mendukung transaction/pooling).
-*   `DIRECT_URL`: URI koneksi langsung ke PostgreSQL (digunakan untuk migrasi skema database).
-*   `JWT_SECRET` & `COOKIE_SECRET`: Kunci enkripsi acak untuk keamanan token dan sesi cookie.
-*   `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: Kredensial integrasi Google OAuth Client.
-*   `GEMINI_API_KEY`: Kunci API Google AI Studio Anda untuk asisten keuangan pintar.
-*   `CLOUDINARY_URL`: URI integrasi penyimpanan media Cloudinary.
-*   `CLIENT_URL`: Alamat URL aplikasi frontend Anda (lokal: `http://localhost:5173`).
+| Variabel | Keterangan |
+|----------|------------|
+| `PORT` | Port server API (default: `5001`) |
+| `DATABASE_URL` | URI koneksi PostgreSQL utama (pooling) |
+| `DIRECT_URL` | URI koneksi langsung PostgreSQL (khusus migrasi Prisma) |
+| `JWT_SECRET` | Kunci enkripsi token JWT (gunakan string acak panjang) |
+| `COOKIE_SECRET` | Kunci penandatanganan sesi cookie |
+| `GOOGLE_CLIENT_ID` | Client ID OAuth dari Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | Client Secret OAuth dari Google Cloud Console |
+| `GEMINI_API_KEY` | API Key dari Google AI Studio |
+| `CLOUDINARY_URL` | URI lengkap integrasi Cloudinary |
+| `CLIENT_URL` | URL frontend (lokal: `http://localhost:5173`) |
 
 ---
 
 ## 🤖 Integrasi Gemini AI & OCR Nota
 
-Backend SaKu memiliki modul kecerdasan buatan terdedikasi di `/src/services/ai.service.js`:
-1.  **AI OCR Nota**: Menggunakan model penglihatan multimodal Gemini untuk memindai berkas gambar struk belanja, mengekstrak data nominal secara otomatis, mengenali merchant/toko, mendeteksi tanggal transaksi, dan mengklasifikasikan kategori transaksi secara cerdas.
-2.  **Asisten AI (Chatbot)**: Mampu membalas pertanyaan pengguna mengenai perencanaan anggaran, saran pengeluaran, serta memahami konteks portofolio keuangan dan sisa saldo dompet pengguna secara real-time.
+Modul AI terpusat berada di `src/services/ai.service.js` dengan dua kemampuan utama:
+
+### 1. AI OCR Struk (Multimodal Vision)
+- **Input**: Foto struk belanja (JPEG/PNG) yang diunggah pengguna
+- **Proses**: Model Gemini Vision menganalisis gambar dan mengekstrak:
+  - Nominal transaksi
+  - Nama merchant / toko
+  - Tanggal transaksi
+  - Kategori pengeluaran yang relevan
+- **Output**: Objek JSON terstruktur siap disimpan ke database
+
+### 2. Asisten Finansial AI (Chat)
+- Menjawab pertanyaan seputar perencanaan anggaran dan saran keuangan
+- Memahami konteks portofolio: saldo dompet, riwayat transaksi, dan budget pengguna secara real-time
 
 ---
 
 ## 🏃 Skrip Database & Server (pnpm)
 
-Dari dalam folder `backend/` atau menggunakan filter dari root workspace:
+Jalankan dari dalam folder `backend/` atau dari root workspace dengan filter `--filter backend`:
 
-*   **Menjalankan Mode Pengembangan (Nodemon)**:
-    ```bash
-    pnpm dev
-    ```
-*   **Menjalankan Mode Produksi**:
-    ```bash
-    pnpm start
-    ```
-*   **Membuat Migrasi Baru & Menerapkan ke Database**:
-    ```bash
-    pnpm db:migrate
-    ```
-*   **Mengisi Data Awal (Seed)**:
-    ```bash
-    pnpm db:seed
-    ```
-*   **Membuat/Menghasilkan Prisma Client**:
-    ```bash
-    pnpm db:generate
-    ```
+```bash
+# Mode pengembangan (Nodemon watch)
+pnpm dev
+
+# Mode produksi
+pnpm start
+
+# Generate Prisma Client (wajib setelah clone pertama kali)
+pnpm db:generate
+
+# Buat & terapkan migrasi skema baru ke database
+pnpm db:migrate
+
+# Isi data awal kategori transaksi
+pnpm db:seed
+```

@@ -1,18 +1,24 @@
-# 🖥️ SaKu - Frontend Client
+# 🖥️ SaKu — Frontend Client
 
-Bagian ini berisi kode sumber aplikasi client-side **SaKu (Smart Expense Tracker)**. Dibangun menggunakan **React** dengan build-tool **Vite** dan dihiasi dengan **Tailwind CSS** untuk menciptakan antarmuka pengguna yang premium, dinamis, serta mendukung Dark Mode secara penuh.
+> Bagian dari monorepo [SaKu - Smart Expense Tracker](../README.md)
+
+Kode sumber aplikasi client-side **SaKu**. Dibangun menggunakan **React 19** dengan build-tool **Vite** dan menggunakan **Tailwind CSS** untuk antarmuka yang premium, dinamis, serta mendukung Dark Mode penuh.
 
 ---
 
 ## 🛠️ Tech Stack & Dependensi Utama
 
-*   **Runtime & Compiler**: React (v19), Vite (v8), Babel
-*   **Routing**: React Router DOM (v7)
-*   **Styling**: Tailwind CSS & Vanilla CSS Variables (untuk Glassmorphism dan tema responsif)
-*   **Icons**: Lucide React
-*   **HTTP Client**: Axios (dengan interceptors untuk otomatisasi pengiriman token JWT via cookie/kredensial)
-*   **Charts**: Recharts (untuk pelaporan data statistik visual)
-*   **Lain-lain**: Day.js (pustaka manipulasi tanggal lokal), React Hot Toast (untuk feedback toast notifikasi yang estetik)
+| Paket | Versi | Kegunaan |
+|-------|-------|----------|
+| React | v19 | UI Library |
+| Vite | v8 | Build tool & dev server |
+| React Router DOM | v7 | Client-side routing |
+| Tailwind CSS | v4 | Utility-first styling |
+| Axios | latest | HTTP client (cookie credentials & interceptors) |
+| Recharts | latest | Visualisasi statistik data keuangan |
+| Lucide React | latest | Library ikon modern |
+| Day.js | latest | Manipulasi & format tanggal |
+| React Hot Toast | latest | Notifikasi toast estetik |
 
 ---
 
@@ -20,24 +26,24 @@ Bagian ini berisi kode sumber aplikasi client-side **SaKu (Smart Expense Tracker
 
 ```
 frontend/
-├── public/                # Static assets (logo, SVG, dll.)
+├── public/                # Static assets (favicon saku.svg, dll.)
 ├── src/
-│   ├── api/               # Endpoint REST API (auth, wallet, transactions, dll.)
+│   ├── api/               # Definisi endpoint REST API (auth, wallet, transactions, dll.)
 │   ├── assets/            # Gambar dan banner statis pendukung
-│   ├── components/        # Komponen React reusable
-│   │   ├── common/        # Komponen dasar (Button, Input, Modal, UserAvatar)
-│   │   ├── layout/        # Komponen tata letak (Sidebar, BottomNav, AppLayout)
-│   │   └── transaction/   # Kartu transaksi dan formulir transaksi
-│   ├── context/           # Global State Context (AuthContext & ThemeContext)
-│   ├── hooks/             # Custom React Hooks (useWallet, useTheme, useMoneyInput)
-│   ├── pages/             # Komponen halaman router (Dashboard, Wallet, dll.)
-│   ├── routes/            # Konfigurasi perutean & ProtectedRoute
-│   ├── utils/             # Fungsi helper & format data kustom
-│   ├── App.jsx            # Entrypoint komponen utama React
-│   ├── index.css          # Desain sistem global CSS, CSS Variables, dan animasi
-│   └── main.jsx           # Root mounter komponen React
-├── Dockerfile             # Konfigurasi multi-stage build Docker
-├── nginx.conf             # Konfigurasi reverse proxy Nginx produksi
+│   ├── components/
+│   │   ├── common/        # Komponen dasar reusable (Button, Input, Modal, UserAvatar)
+│   │   ├── layout/        # Tata letak (Sidebar, BottomNav, AppLayout)
+│   │   └── transaction/   # Kartu & formulir transaksi
+│   ├── context/           # Global State (AuthContext & ThemeContext)
+│   ├── hooks/             # Custom React Hooks
+│   ├── pages/             # Komponen halaman per-route
+│   ├── routes/            # Konfigurasi rute & ProtectedRoute
+│   ├── utils/             # Helper functions & formatter
+│   ├── App.jsx            # Komponen root React
+│   ├── index.css          # Sistem desain global, CSS Variables, animasi
+│   └── main.jsx           # Entry point (ReactDOM.createRoot)
+├── Dockerfile             # Multi-stage build Docker (Node build → Nginx serve)
+├── nginx.conf             # Konfigurasi Nginx untuk produksi (SPA fallback)
 └── package.json           # Dependensi & skrip pnpm frontend
 ```
 
@@ -47,35 +53,45 @@ frontend/
 
 Buat file `.env` di dalam folder ini berdasarkan template `.env.example`:
 
-*   `VITE_API_URL`: Alamat API backend Anda (lokal: `http://localhost:5001/api`).
-*   `VITE_GOOGLE_CLIENT_ID`: ID Client OAuth dari Google Cloud Console (untuk fitur Google login).
+| Variabel | Contoh Nilai | Keterangan |
+|----------|-------------|------------|
+| `VITE_API_URL` | `http://localhost:5001/api` | Alamat base URL backend API |
+| `VITE_GOOGLE_CLIENT_ID` | `xxx.apps.googleusercontent.com` | Client ID Google OAuth |
 
 ---
 
-## 📝 Custom Hooks Khas SaKu
+## 🧩 Custom Hooks Khas SaKu
 
-*   **`useMoneyInput`**: Mengubah input teks nominal secara instan ke format ribuan rupiah Indonesia (misal: mengetik `1000000` otomatis ditampilkan menjadi `1.000.000` di antarmuka, tetapi tetap mengirim nilai `1000000` berupa angka asli ke database).
-*   **`useTheme`**: Menyinkronkan tema warna (*light*, *dark*, atau *system*), skema gradasi kartu bento, serta visibilitas saldo (`showBalance`) secara global di seluruh aplikasi.
+### `useMoneyInput`
+Mengubah input teks nominal secara otomatis ke format ribuan rupiah Indonesia.
+- Mengetik `1000000` → tampil `1.000.000`
+- Nilai yang dikirim ke API tetap berupa angka asli `1000000`
+
+### `useTheme`
+Menyinkronkan seluruh preferensi tampilan secara global di semua halaman:
+- Tema warna: `light` | `dark` | `system`
+- Skema gradasi kartu bento dompet
+- Visibilitas saldo (`showBalance`) — toggle satu klik menyembunyikan semua nominal
+
+### `useWallet`
+Fetching & caching data dompet aktif pengguna untuk digunakan di berbagai halaman secara konsisten.
 
 ---
 
 ## 🏃 Skrip yang Tersedia (pnpm)
 
-Dari dalam folder `frontend/` atau menggunakan filter dari root workspace:
+Jalankan dari dalam folder `frontend/` atau dari root workspace dengan filter `--filter frontend`:
 
-*   **Menjalankan Mode Pengembangan**:
-    ```bash
-    pnpm dev
-    ```
-*   **Kompilasi Produksi**:
-    ```bash
-    pnpm build
-    ```
-*   **Melihat Pratinjau Hasil Build**:
-    ```bash
-    pnpm preview
-    ```
-*   **Linting Kode**:
-    ```bash
-    pnpm lint
-    ```
+```bash
+# Mode pengembangan (hot reload)
+pnpm dev
+
+# Build produksi ke dist/
+pnpm build
+
+# Preview hasil build lokal
+pnpm preview
+
+# Linting kode (ESLint)
+pnpm lint
+```
