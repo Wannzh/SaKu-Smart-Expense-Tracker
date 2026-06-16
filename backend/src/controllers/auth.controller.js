@@ -59,4 +59,21 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { register, login, logout, getMe, updateProfile };
+const googleAuth = async (req, res, next) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      const { createError } = require("../utils/response");
+      throw createError(400, "ID Token Google wajib disertakan");
+    }
+    const { user, token, isNewUser } = await authService.googleLogin(idToken);
+
+    setTokenCookie(res, token);
+
+    sendSuccess(res, 200, "Login dengan Google berhasil", { user, isNewUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { register, login, logout, getMe, updateProfile, googleAuth };

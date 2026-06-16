@@ -14,6 +14,9 @@ router.post("/login", authController.login);
 // POST /api/auth/logout
 router.post("/logout", authController.logout);
 
+// POST /api/auth/google
+router.post("/google", authController.googleAuth);
+
 // GET /api/auth/me (protected)
 router.get("/me", authMiddleware, authController.getMe);
 

@@ -110,4 +110,59 @@ const updateProfile = async (userId, { name, avatar }) => {
   return updatedUser;
 };
 
-module.exports = { register, login, updateProfile };
+const { OAuth2Client } = require("google-auth-library");
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+/**
+ * Sanitize user object (remove password)
+ */
+const sanitizeUser = (user) => {
+  const { password, ...userWithoutPassword } = user;
+  return userWithoutPassword;
+};
+
+const googleLogin = async (idToken) => {
+  // Verify Google token
+  const ticket = await client.verifyIdToken({
+    idToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const { email, name, picture, sub: googleId } = payload;
+
+  if (!email) {
+    throw createError(400, "Email tidak ditemukan dari akun Google");
+  }
+
+  // Cari user berdasarkan email
+  let user = await prisma.user.findUnique({ where: { email } });
+  const userExists = !!user;
+
+  if (!user) {
+    // Auto-register jika belum ada
+    user = await prisma.user.create({
+      data: {
+        email,
+        name: name || email.split("@")[0],
+        password: "", // kosong karena OAuth
+        avatar: picture || null,
+      },
+    });
+  } else {
+    // Update avatar jika ada dari Google
+    if (picture && !user.avatar) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar: picture },
+      });
+    }
+  }
+
+  // Generate JWT sama seperti login biasa
+  const token = generateToken(user.id);
+
+  return { user: sanitizeUser(user), token, isNewUser: !userExists };
+};
+
+module.exports = { register, login, updateProfile, googleLogin };

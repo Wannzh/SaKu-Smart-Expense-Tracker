@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback } from "react";
-import { getMe, loginUser, logoutUser, registerUser } from "../api/auth.api";
+import { getMe, loginUser, logoutUser, registerUser, googleLogin } from "../api/auth.api";
 import toast from "react-hot-toast";
 
 export const AuthContext = createContext(null);
@@ -38,13 +38,31 @@ export function AuthProvider({ children }) {
     return res.data;
   }, []);
 
+  const loginWithGoogle = useCallback(async (credentialResponse) => {
+    setIsLoading(true);
+    try {
+      const res = await googleLogin(credentialResponse.credential);
+      const user = res.data?.data?.user;
+      setUser(user);
+      toast.success(`Selamat datang, ${user.name}! 👋`);
+      return res.data;
+    } catch (err) {
+      toast.error(
+        err.response?.data?.message || "Login Google gagal"
+      );
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     await logoutUser();
     setUser(null);
     toast.success("Logout berhasil");
   }, []);
 
-  const value = { user, setUser, isLoading, login, logout, register };
+  const value = { user, setUser, isLoading, login, logout, register, loginWithGoogle };
 
   return (
     <AuthContext.Provider value={value}>
