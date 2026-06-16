@@ -292,7 +292,7 @@ const StepDone = memo(function StepDone({ user, walletBalance }) {
     <div className="flex flex-col items-center text-center">
       {/* Animated checkmark */}
       <div className="relative mb-6">
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 animate-bounce-gentle">
+        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/20 text-emerald-500 border border-emerald-100 dark:border-transparent animate-bounce-gentle">
           <CheckCircle2 className="h-14 w-14 text-emerald-500" />
         </div>
         <div className="absolute -right-1 -top-1">
@@ -300,8 +300,8 @@ const StepDone = memo(function StepDone({ user, walletBalance }) {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">Semua Siap! 🎉</h2>
-      <p className="text-sm text-gray-500 mb-8">Kamu sudah siap mengelola keuangan dengan SaKu</p>
+      <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Semua Siap! 🎉</h2>
+      <p className="text-sm text-[var(--text-secondary)] mb-8">Kamu sudah siap mengelola keuangan dengan SaKu</p>
 
       {/* Summary card */}
       <div className="w-full rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 p-5 text-white text-left shadow-lg">
@@ -356,8 +356,8 @@ const OnboardingPage = memo(function OnboardingPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Use CSS vars only on step 5 (theme picker), hardcoded light elsewhere
-  const isThemeStep = step === 4;
+  // Use CSS vars only on step 5 (theme picker) and onwards, hardcoded light elsewhere
+  const isThemeStep = step >= 4;
 
   const handleNotifToggle = useCallback(async () => {
     if (!notifEnabled && "Notification" in window) {
@@ -369,6 +369,7 @@ const OnboardingPage = memo(function OnboardingPage() {
   }, [notifEnabled]);
 
   const handleNext = useCallback(async () => {
+    if (isProcessing) return;
     // Step 4 (index 3) — create wallet
     if (step === 3) {
       setIsProcessing(true);
@@ -402,7 +403,7 @@ const OnboardingPage = memo(function OnboardingPage() {
     }
 
     setStep((s) => s + 1);
-  }, [step, walletAmountVal, createWallet, navigate]);
+  }, [step, walletAmountVal, createWallet, navigate, isProcessing]);
 
   const handleBack = useCallback(() => {
     setStep((s) => Math.max(0, s - 1));
