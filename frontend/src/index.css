@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -6,11 +7,11 @@
 :root {
   --bg-primary: #F9FAFB;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #F3F4F6;
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-tertiary: #9CA3AF;
-  --border-color: #E5E7EB;
+  --bg-tertiary: #F0ECF9;
+  --text-primary: #1b1b24;
+  --text-secondary: #464555;
+  --text-tertiary: #777587;
+  --border-color: #c7c4d8;
   --card-bg: #FFFFFF;
   --sidebar-bg: #FFFFFF;
 }
@@ -19,9 +20,9 @@
   --bg-primary: #0F172A;
   --bg-secondary: #1E293B;
   --bg-tertiary: #334155;
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-tertiary: #64748B;
+  --text-primary: #f3effc;
+  --text-secondary: #c7c4d8;
+  --text-tertiary: #777587;
   --border-color: #334155;
   --card-bg: #1E293B;
   --sidebar-bg: #1E293B;
@@ -143,4 +144,130 @@ body {
 }
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ─── Inter Font ─────────────────────────────────────────── */
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ─── Tabular Numbers untuk semua angka keuangan ─────────── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Card elevation Level 1 ─────────────────────────────── */
+.card-shadow {
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Card elevation Level 2 (hover) ─────────────────────── */
+.card-shadow-hover {
+  box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Glassmorphism untuk modal/overlay ──────────────────── */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(var(--card-bg), 0.8);
+}
+
+/* ─── Focus ring untuk input fields ──────────────────────── */
+.input-focus {
+  border: 2px solid #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+/* ─── Smooth page transitions ────────────────────────────── */
+.page-enter {
+  animation: pageEnter 0.3s ease-out both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Bento Card Style ───────────────────────────────────── */
+.bento-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bento-card:hover {
+  box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* Card dot pattern */
+.card-pattern {
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    rgba(255,255,255,0.15) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+}
+
+/* Card 3D flip */
+.card-perspective {
+  perspective: 1000px;
+}
+.card-flip-inner {
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.card-flip-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1rem;
+}
+.card-face-back {
+  transform: rotateY(180deg);
+}
+
+/* Mesh gradient untuk card detail */
+.mesh-gradient {
+  background-color: #3525cd;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, 
+      transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, 
+      transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, 
+      transparent 50%);
+}
+
+/* Left border status indicator */
+.bill-card-overdue {
+  border-left: 4px solid #EF4444;
+  background-color: rgba(239, 68, 68, 0.03);
+}
+.bill-card-upcoming {
+  border-left: 4px solid #F59E0B;
+  background-color: rgba(245, 158, 11, 0.03);
+}
+.bill-card-pending {
+  border-left: 4px solid #4F46E5;
+}
+.bill-card-paid {
+  border-left: 4px solid #10B981;
+  opacity: 0.7;
 }

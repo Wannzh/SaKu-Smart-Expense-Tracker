@@ -30,8 +30,12 @@ const CategoryListPage = memo(function CategoryListPage() {
     }));
   }, []);
 
+  const totalSubCategories = useMemo(() => {
+    return filteredCategories.reduce((sum, cat) => sum + (cat.subCategories?.length || 0), 0);
+  }, [filteredCategories]);
+
   return (
-    <div className="max-w-xl mx-auto pb-12 animate-fade-slide-up">
+    <div className="w-full max-w-xl lg:max-w-3xl mx-auto pb-24 animate-fade-slide-up">
       {/* HEADER */}
       <div className="flex items-center gap-3 py-4 mb-4">
         <button
@@ -45,6 +49,22 @@ const CategoryListPage = memo(function CategoryListPage() {
         </h2>
       </div>
 
+      {/* STAT CARDS */}
+      <div className="grid grid-cols-2 gap-4 mb-5">
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Total Kategori</span>
+          <span className="text-xl font-extrabold text-[var(--text-primary)] mt-1 tabular-nums">
+            {filteredCategories.length}
+          </span>
+        </div>
+        <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Total Sub-kategori</span>
+          <span className="text-xl font-extrabold text-[var(--text-primary)] mt-1 tabular-nums">
+            {totalSubCategories}
+          </span>
+        </div>
+      </div>
+
       {/* TABS */}
       <div className="flex border-b border-[var(--border-color)] mb-5">
         <button
@@ -52,7 +72,7 @@ const CategoryListPage = memo(function CategoryListPage() {
           className={clsx(
             "flex-1 py-3 text-center font-bold text-sm transition-all border-b-2 cursor-pointer",
             activeTab === "EXPENSE"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+              ? "border-indigo-650 text-indigo-650 dark:text-indigo-400"
               : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
@@ -63,7 +83,7 @@ const CategoryListPage = memo(function CategoryListPage() {
           className={clsx(
             "flex-1 py-3 text-center font-bold text-sm transition-all border-b-2 cursor-pointer",
             activeTab === "INCOME"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+              ? "border-indigo-655 text-indigo-655 dark:text-indigo-400"
               : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
           )}
         >
@@ -80,7 +100,7 @@ const CategoryListPage = memo(function CategoryListPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
           {filteredCategories.length > 0 ? (
             filteredCategories.map((category) => {
               const IconComponent = LucideIcons[category.icon] || LucideIcons.Tag;
@@ -92,7 +112,7 @@ const CategoryListPage = memo(function CategoryListPage() {
               return (
                 <div
                   key={category.id}
-                  className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] mb-3 overflow-hidden shadow-sm transition-all duration-200"
+                  className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)]/60 overflow-hidden shadow-sm hover:border-indigo-500/25 transition-all duration-200"
                 >
                   {/* Header */}
                   <div
@@ -103,19 +123,21 @@ const CategoryListPage = memo(function CategoryListPage() {
                       <div
                         className="flex h-10 w-10 items-center justify-center rounded-xl transition-all scale-100"
                         style={{
-                          backgroundColor: `${catColor}18`,
+                          backgroundColor: `${catColor}1a`,
                           color: catColor,
                         }}
                       >
                         <IconComponent className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+                        <h4 className="text-sm font-bold text-[var(--text-primary)]">
                           {category.name}
                         </h4>
-                        <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 font-medium">
-                          {subCount} sub-kategori
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="px-1.5 py-0.5 text-[9px] font-extrabold bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 rounded-md uppercase tracking-wider">
+                            {subCount} Sub
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <ChevronDown
@@ -133,10 +155,11 @@ const CategoryListPage = memo(function CategoryListPage() {
                         subCategories.map((sub) => (
                           <div
                             key={sub.id}
-                            className="pl-4 py-2 border-l-2 text-sm text-[var(--text-secondary)] font-medium transition-all"
+                            className="flex items-center gap-2 pl-4 py-2 border-l-2 text-sm text-[var(--text-secondary)] font-medium transition-all"
                             style={{ borderColor: catColor }}
                           >
-                            {sub.name}
+                            <div className="h-1.5 w-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0" />
+                            <span>{sub.name}</span>
                           </div>
                         ))
                       ) : (
@@ -150,8 +173,10 @@ const CategoryListPage = memo(function CategoryListPage() {
               );
             })
           ) : (
-            <div className="text-center py-12 text-xs text-[var(--text-secondary)] font-medium bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl">
-              Tidak ada kategori
+            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl shadow-sm p-6">
+              <LucideIcons.Inbox className="h-10 w-10 text-[var(--text-tertiary)] mb-2" />
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">Tidak ada kategori</h3>
+              <p className="text-xs text-[var(--text-tertiary)] mt-1">Gunakan tombol tambah untuk membuat kategori baru.</p>
             </div>
           )}
         </div>

@@ -887,7 +887,7 @@ const ExportPage = memo(function ExportPage() {
   }, [filteredItems]);
 
   return (
-    <div className="max-w-xl mx-auto pb-48 animate-fade-slide-up">
+    <div className="w-full max-w-xl lg:max-w-5xl mx-auto pb-24 animate-fade-slide-up">
       {/* HEADER */}
       <div className="flex items-center gap-3 py-4 mb-4">
         <button
@@ -902,288 +902,353 @@ const ExportPage = memo(function ExportPage() {
         </h2>
       </div>
 
-      <div className="space-y-6">
-        {/* SECTION - Rentang Tanggal */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">
-            Rentang Tanggal
-          </label>
-          
-          {/* Card Tanggal */}
-          <button
-            id="btn-toggle-date-range"
-            onClick={() => setShowCustomDates((prev) => !prev)}
-            className="w-full flex items-center justify-between p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl cursor-pointer hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/30 transition-all text-left shadow-sm group"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-650 dark:text-indigo-400 group-hover:scale-105 transition-transform">
-                <Calendar className="h-5 w-5" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column (Sticky Filter) */}
+        <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-2">
+            Filter Data
+          </p>
+
+          {/* Card Filter Tanggal */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl shadow-sm p-4 space-y-3">
+            <span className="text-xs font-bold text-[var(--text-secondary)]">Rentang Tanggal</span>
+            
+            <button
+              id="btn-toggle-date-range"
+              onClick={() => setShowCustomDates((prev) => !prev)}
+              className="w-full flex items-center justify-between p-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all text-left shadow-sm group"
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-indigo-650 dark:text-indigo-400" />
+                <span className="text-xs font-bold text-[var(--text-primary)]">{rangeText}</span>
               </div>
-              <div>
-                <p className="text-sm font-bold text-[var(--text-primary)]">
-                  {rangeText}
-                </p>
-                <p className="text-[11px] text-[var(--text-tertiary)] font-medium mt-0.5">
-                  Klik untuk ubah rentang tanggal kustom
-                </p>
-              </div>
-            </div>
-            <ChevronDown
-              className={clsx(
-                "h-5 w-5 text-[var(--text-tertiary)] transition-transform duration-200",
-                showCustomDates && "rotate-180"
-              )}
-            />
-          </button>
-
-          {/* Custom Date Inputs (collapsible) */}
-          {showCustomDates && (
-            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 flex flex-col gap-3 shadow-sm animate-fade-in">
-              <div className="flex gap-3 items-center">
-                <div className="flex-1 space-y-1">
-                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider px-1">Mulai</span>
-                  <input
-                    id="input-date-from"
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 transition-all"
-                  />
-                </div>
-                <span className="text-[var(--text-tertiary)] font-bold pt-5">—</span>
-                <div className="flex-1 space-y-1">
-                  <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider px-1">Selesai</span>
-                  <input
-                    id="input-date-to"
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-indigo-500 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3 Shortcut Chips */}
-          <div className="flex gap-2.5 pt-1">
-            {[
-              { key: "THIS_MONTH", label: "Bulan Ini", id: "btn-shortcut-this-month" },
-              { key: "LAST_MONTH", label: "Bulan Lalu", id: "btn-shortcut-last-month" },
-              { key: "ALL_TIME", label: "Semua Waktu", id: "btn-shortcut-all-time" },
-            ].map((chip) => {
-              const isSelected =
-                (chip.key === "THIS_MONTH" &&
-                  dateFrom === dayjs().startOf("month").format("YYYY-MM-DD") &&
-                  dateTo === dayjs().endOf("month").format("YYYY-MM-DD") &&
-                  !showCustomDates) ||
-                (chip.key === "LAST_MONTH" &&
-                  dateFrom === dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD") &&
-                  dateTo === dayjs().subtract(1, "month").endOf("month").format("YYYY-MM-DD") &&
-                  !showCustomDates) ||
-                (chip.key === "ALL_TIME" && !dateFrom && !dateTo && !showCustomDates);
-
-              return (
-                <button
-                  key={chip.key}
-                  id={chip.id}
-                  onClick={() => handleShortcutClick(chip.key)}
-                  className={clsx(
-                    "flex-1 py-2 rounded-xl text-xs font-bold transition-all border cursor-pointer text-center",
-                    isSelected
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
-                      : "bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]"
-                  )}
-                >
-                  {chip.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SECTION - Tipe Transaksi */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">
-            Tipe Transaksi
-          </label>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-            {[
-              { key: "Semua", id: "btn-type-semua" },
-              { key: "Pemasukan", id: "btn-type-pemasukan" },
-              { key: "Pengeluaran", id: "btn-type-pengeluaran" },
-              { key: "Transfer", id: "btn-type-transfer" },
-            ].map((type) => {
-              const isSelected = selectedType === type.key;
-              return (
-                <button
-                  key={type.key}
-                  id={type.id}
-                  onClick={() => setSelectedType(type.key)}
-                  className={clsx(
-                    "px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer flex-1 text-center",
-                    isSelected
-                      ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
-                      : "bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
-                  )}
-                >
-                  {type.key}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SECTION - Dompet */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">
-            Dompet
-          </label>
-          <button
-            id="btn-wallet-picker"
-            onClick={() => setIsWalletPickerOpen(true)}
-            className="w-full flex items-center justify-between p-4 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl cursor-pointer hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/30 transition-all text-left shadow-sm group"
-          >
-            <div className="flex items-center gap-3">
-              <div
+              <ChevronDown
                 className={clsx(
-                  "flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-105",
-                  selectedWallet
-                    ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
-                    : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                  "h-4 w-4 text-[var(--text-tertiary)] transition-transform duration-200",
+                  showCustomDates && "rotate-180"
                 )}
-                style={
-                  selectedWallet?.color
-                    ? {
-                        backgroundColor: `${selectedWallet.color}1c`,
-                        color: selectedWallet.color,
-                      }
-                    : undefined
-                }
-              >
-                <WalletIcon className="h-5 w-5" />
+              />
+            </button>
+
+            {/* Custom Date Range Collapsible */}
+            {showCustomDates && (
+              <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl p-3 flex flex-col gap-2.5 shadow-inner animate-fade-in">
+                <div className="flex gap-2.5 items-center">
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">Mulai</span>
+                    <input
+                      id="input-date-from"
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => setDateFrom(e.target.value)}
+                      className="w-full bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <span className="text-[var(--text-tertiary)] font-bold pt-4">—</span>
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase">Selesai</span>
+                    <input
+                      id="input-date-to"
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => setDateTo(e.target.value)}
+                      className="w-full bg-[var(--card-bg)] border border-[var(--border-color)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--text-primary)] focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold text-[var(--text-primary)]">
-                  {selectedWallet ? selectedWallet.name : "Semua Dompet"}
-                </p>
-                <p className="text-[11px] text-[var(--text-tertiary)] font-medium mt-0.5">
-                  {selectedWallet ? `${selectedWallet.bankName || "Dompet"} · ${formatCurrency(selectedWallet.balance)}` : "Tampilkan transaksi dari semua dompet"}
-                </p>
-              </div>
+            )}
+
+            {/* 3 Shortcut Chips */}
+            <div className="flex gap-2">
+              {[
+                { key: "THIS_MONTH", label: "Bulan Ini", id: "btn-shortcut-this-month" },
+                { key: "LAST_MONTH", label: "Bulan Lalu", id: "btn-shortcut-last-month" },
+                { key: "ALL_TIME", label: "Semua Waktu", id: "btn-shortcut-all-time" },
+              ].map((chip) => {
+                const isSelected =
+                  (chip.key === "THIS_MONTH" &&
+                    dateFrom === dayjs().startOf("month").format("YYYY-MM-DD") &&
+                    dateTo === dayjs().endOf("month").format("YYYY-MM-DD") &&
+                    !showCustomDates) ||
+                  (chip.key === "LAST_MONTH" &&
+                    dateFrom === dayjs().subtract(1, "month").startOf("month").format("YYYY-MM-DD") &&
+                    dateTo === dayjs().subtract(1, "month").endOf("month").format("YYYY-MM-DD") &&
+                    !showCustomDates) ||
+                  (chip.key === "ALL_TIME" && !dateFrom && !dateTo && !showCustomDates);
+
+                return (
+                  <button
+                    key={chip.key}
+                    id={chip.id}
+                    onClick={() => handleShortcutClick(chip.key)}
+                    className={clsx(
+                      "flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all border cursor-pointer text-center",
+                      isSelected
+                        ? "bg-indigo-650 border-indigo-650 text-white shadow-sm"
+                        : "bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
+                    )}
+                  >
+                    {chip.label}
+                  </button>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-1">
-              {selectedWallet && (
-                <button
-                  id="btn-reset-wallet"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedWallet(null);
-                  }}
-                  className="px-2 py-1 text-[10px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg cursor-pointer transition-colors"
+          </div>
+
+          {/* Card Filter Tipe Transaksi */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl shadow-sm p-4 space-y-2">
+            <span className="text-xs font-bold text-[var(--text-secondary)]">Tipe Transaksi</span>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {[
+                { key: "Semua", id: "btn-type-semua" },
+                { key: "Pemasukan", id: "btn-type-pemasukan" },
+                { key: "Pengeluaran", id: "btn-type-pengeluaran" },
+                { key: "Transfer", id: "btn-type-transfer" },
+              ].map((type) => {
+                const isSelected = selectedType === type.key;
+                return (
+                  <button
+                    key={type.key}
+                    id={type.id}
+                    onClick={() => setSelectedType(type.key)}
+                    className={clsx(
+                      "px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all border cursor-pointer flex-1 text-center",
+                      isSelected
+                        ? "bg-indigo-655 border-indigo-655 text-white shadow-sm"
+                        : "bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"
+                    )}
+                  >
+                    {type.key}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card Filter Dompet */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl shadow-sm p-4 space-y-2">
+            <span className="text-xs font-bold text-[var(--text-secondary)]">Dompet</span>
+            <button
+              id="btn-wallet-picker"
+              onClick={() => setIsWalletPickerOpen(true)}
+              className="w-full flex items-center justify-between p-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl cursor-pointer hover:bg-[var(--bg-tertiary)] transition-all text-left shadow-sm group animate-fade-in"
+            >
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={clsx(
+                    "flex h-8 w-8 items-center justify-center rounded-lg transition-transform group-hover:scale-105",
+                    selectedWallet
+                      ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                  )}
+                  style={
+                    selectedWallet?.color
+                      ? {
+                          backgroundColor: `${selectedWallet.color}1c`,
+                          color: selectedWallet.color,
+                        }
+                      : undefined
+                  }
                 >
-                  Reset
-                </button>
-              )}
-              <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)]" />
+                  <WalletIcon className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--text-primary)]">
+                    {selectedWallet ? selectedWallet.name : "Semua Dompet"}
+                  </p>
+                  <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-0.5">
+                    {selectedWallet ? `${selectedWallet.bankName || "Dompet"} · ${formatCurrency(selectedWallet.balance)}` : "Tampilkan semua dompet"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                {selectedWallet && (
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedWallet(null);
+                    }}
+                    className="px-1.5 py-0.5 text-[9px] font-bold bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded cursor-pointer transition-colors"
+                  >
+                    Reset
+                  </span>
+                )}
+                <ChevronDown className="h-4 w-4 text-[var(--text-tertiary)]" />
+              </div>
+            </button>
+          </div>
+
+          {/* Dropdown Kategori */}
+          <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl shadow-sm p-4 space-y-2">
+            <span className="text-xs font-bold text-[var(--text-secondary)]">Kategori</span>
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none">
+                <Tag className="h-4 w-4" />
+              </div>
+              <select
+                id="select-category"
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                disabled={selectedType === "Transfer"}
+                className="w-full rounded-xl border border-[var(--border-color)] pl-9 pr-8 py-2 text-xs text-[var(--text-primary)] bg-[var(--card-bg)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none shadow-sm"
+              >
+                <option value="">Semua Kategori</option>
+                {filteredCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
+                <ChevronDown className="h-3.5 w-3.5" />
+              </div>
             </div>
-          </button>
+            {selectedType === "Transfer" && (
+              <p className="text-[9px] text-amber-500 font-semibold px-1">
+                ⚠️ Kategori tidak berlaku untuk transaksi bertipe Transfer
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* SECTION - Kategori */}
-        <div className="space-y-2">
-          <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider px-1">
-            Kategori
-          </label>
-          <div className="relative">
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] pointer-events-none">
-              <Tag className="h-4.5 w-4.5" />
+        {/* Right Column (Summary Stats & Export Actions) */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Kanan Atas: Desktop-only Stat Cards */}
+          <div className="hidden lg:grid grid-cols-3 gap-4">
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Pemasukan</span>
+              <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">
+                {formatCurrency(totalIncome)}
+              </span>
             </div>
-            <select
-              id="select-category"
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              disabled={selectedType === "Transfer"}
-              className="w-full rounded-2xl border border-[var(--border-color)] pl-11 pr-10 py-3.5 text-sm text-[var(--text-primary)] bg-[var(--card-bg)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed appearance-none shadow-sm"
-            >
-              <option value="">Semua Kategori</option>
-              {filteredCategories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--text-secondary)]">
-              <ChevronDown className="h-4 w-4" />
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Pengeluaran</span>
+              <span className="text-base font-extrabold text-rose-600 dark:text-rose-400 mt-1 tabular-nums">
+                {formatCurrency(totalExpense)}
+              </span>
+            </div>
+            <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm flex flex-col">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Saldo Bersih</span>
+              <span className={clsx(
+                "text-base font-extrabold mt-1 tabular-nums",
+                netBalance >= 0 ? "text-indigo-600 dark:text-indigo-400" : "text-rose-600 dark:text-rose-400"
+              )}>
+                {formatCurrency(netBalance)}
+              </span>
             </div>
           </div>
-          {selectedType === "Transfer" && (
-            <p className="text-[10px] text-amber-500 font-semibold px-1">
-              ⚠️ Kategori tidak berlaku untuk transaksi bertipe Transfer
+
+          {/* Summary Banner Card (gradient indigo) */}
+          <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-2xl p-5 shadow-md shadow-indigo-600/10">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">
+                  Periode Aktif
+                </p>
+                <h3 className="text-base font-extrabold mt-1">{rangeText}</h3>
+              </div>
+              <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white tracking-wide">
+                Active
+              </span>
+            </div>
+            <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center text-xs">
+              <span className="text-indigo-150">Total data transaksi terfilter</span>
+              <span className="font-extrabold text-sm tabular-nums">{filteredItems.length} Transaksi</span>
+            </div>
+          </div>
+
+          {/* Section Format Ekspor */}
+          <div className="space-y-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-2">
+              Format Ekspor
             </p>
-          )}
-        </div>
 
-        {/* FOOTER ACTIONS IN FLOW */}
-        <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-5 shadow-sm mt-8 space-y-4">
-          <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-            <span className="text-[10px] font-bold text-[var(--text-secondary)] uppercase tracking-wider">
-              Total Filter
-            </span>
-            <span className="text-sm font-extrabold text-[var(--text-primary)] flex items-center gap-1.5">
-              {isDataLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
-              ) : (
-                <span className="tabular-nums">{filteredItems.length}</span>
+            {/* XLSX CARD */}
+            <div
+              onClick={() => {
+                if (!isDataLoading && !isGenerating && filteredItems.length > 0) {
+                  handleExportXLSX();
+                }
+              }}
+              className={clsx(
+                "bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/30 transition-all shadow-sm group",
+                (isDataLoading || isGenerating || filteredItems.length === 0) && "opacity-50 pointer-events-none"
               )}
-              <span className="text-xs font-semibold text-[var(--text-secondary)] normal-case">
-                Transaksi ditemukan
-              </span>
-            </span>
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
+                  <FileSpreadsheet className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Spreadsheet (.xlsx)</h4>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Ekspor data lengkap dengan format Microsoft Excel</p>
+                </div>
+              </div>
+              <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)] -rotate-90" />
+            </div>
+
+            {/* PDF CARD */}
+            <div
+              onClick={() => {
+                if (!isDataLoading && !isGenerating && filteredItems.length > 0) {
+                  handleExportPDF();
+                }
+              }}
+              className={clsx(
+                "bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/30 transition-all shadow-sm group",
+                (isDataLoading || isGenerating || filteredItems.length === 0) && "opacity-50 pointer-events-none"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 group-hover:scale-105 transition-transform">
+                  {isGenerating ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <FileText className="h-5 w-5" />
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Laporan PDF (.pdf)</h4>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Ekspor laporan ringkasan visual & rincian transaksi</p>
+                </div>
+              </div>
+              <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)] -rotate-90" />
+            </div>
+
+            {/* CSV / COPY CARD */}
+            <div
+              onClick={() => {
+                if (!isDataLoading && !isGenerating && filteredItems.length > 0) {
+                  handleCopyToClipboard();
+                }
+              }}
+              className={clsx(
+                "bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-tertiary)] hover:border-indigo-500/30 transition-all shadow-sm group",
+                (isDataLoading || isGenerating || filteredItems.length === 0) && "opacity-50 pointer-events-none"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+                  <Copy className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Salin Teks (CSV)</h4>
+                  <p className="text-xs text-[var(--text-tertiary)] mt-0.5">Salin format CSV untuk di-paste langsung di apps lain</p>
+                </div>
+              </div>
+              <ChevronDown className="h-5 w-5 text-[var(--text-tertiary)] -rotate-90" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {/* COPY BUTTON */}
-            <button
-              id="btn-copy-csv"
-              onClick={handleCopyToClipboard}
-              disabled={isDataLoading || isGenerating || filteredItems.length === 0}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] font-bold text-xs cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-transparent whitespace-nowrap"
-              title="Salin CSV"
-            >
-              <Copy className="h-4.5 w-4.5 shrink-0" />
-              <span className="whitespace-nowrap">Salin CSV</span>
-            </button>
-
-            {/* XLSX BUTTON */}
-            <button
-              id="btn-export-xlsx"
-              onClick={handleExportXLSX}
-              disabled={isDataLoading || isGenerating || filteredItems.length === 0}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-[var(--border-color)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-bold text-xs cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-[var(--card-bg)] shadow-sm whitespace-nowrap"
-              title="Ekspor XLSX"
-            >
-              <FileSpreadsheet className="h-4.5 w-4.5 shrink-0" />
-              <span className="whitespace-nowrap">Ekspor XLSX</span>
-            </button>
-
-            {/* PDF BUTTON */}
-            <button
-              id="btn-export-pdf"
-              onClick={handleExportPDF}
-              disabled={isDataLoading || isGenerating || filteredItems.length === 0}
-              className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs cursor-pointer active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-indigo-600/10 dark:shadow-none whitespace-nowrap"
-              title="Ekspor PDF"
-            >
-              {isGenerating ? (
-                <Loader2 className="h-4.5 w-4.5 animate-spin shrink-0" />
-              ) : (
-                <FileText className="h-4.5 w-4.5 shrink-0" />
-              )}
-              <span className="whitespace-nowrap">
-                {isGenerating ? "Generating..." : "Ekspor PDF"}
-              </span>
-            </button>
+          {/* Counter chip di bawah */}
+          <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 rounded-2xl px-4 py-3 shadow-sm">
+            <span className="bg-indigo-650 text-white text-xs font-extrabold px-3 py-1 rounded-full tabular-nums shrink-0">
+              {filteredItems.length}
+            </span>
+            <span className="text-xs font-semibold text-indigo-950 dark:text-indigo-300">
+              transaksi ditemukan terfilter
+            </span>
           </div>
         </div>
       </div>

@@ -159,14 +159,44 @@ const updateRecurring = async (userId, id, data) => {
     updateData.nextRunDate = finalStart;
   }
 
-  const recurring = await prisma.recurring.update({
+  const updatedRecurring = await prisma.recurring.update({
     where: { id },
     data: updateData,
   });
 
+  // Sync bill yang terhubung jika startDate berubah
+  if (data.startDate !== undefined) {
+    const linkedBill = await prisma.bill.findFirst({
+      where: {
+        recurringId: id,
+        status: { not: "PAID" }
+      },
+      orderBy: { dueDate: "asc" }
+    });
+
+    if (linkedBill) {
+      // Ambil tanggal dari startDate yang baru
+      const newStartDate = new Date(data.startDate);
+      const billDueDate = new Date(linkedBill.dueDate);
+      
+      // Update hanya tanggal dalam bulan yang sama
+      // pertahankan bulan dan tahun dari bill lama
+      const newDueDate = new Date(
+        billDueDate.getFullYear(),
+        billDueDate.getMonth(),
+        newStartDate.getDate() // ambil tanggal dari startDate baru
+      );
+
+      await prisma.bill.update({
+        where: { id: linkedBill.id },
+        data: { dueDate: newDueDate }
+      });
+    }
+  }
+
   return {
-    ...recurring,
-    amount: Number(recurring.amount),
+    ...updatedRecurring,
+    amount: Number(updatedRecurring.amount),
   };
 };
 
@@ -224,6 +254,29 @@ const executeRecurring = async (userId, id, isAuto = false) => {
       });
     }
 
+    // Ambil kategori "Lainnya" sebagai fallback
+    let categoryId = recurring.categoryId;
+
+    if (!categoryId) {
+      const defaultCategory = await tx.category.findFirst({
+        where: {
+          type: recurring.type,
+          name: { contains: "Lainnya", mode: "insensitive" }
+        }
+      });
+      // Jika tidak ada "Lainnya", gunakan kategori pertama yang ada
+      if (!defaultCategory) {
+        const firstCategory = await tx.category.findFirst({
+          where: { 
+            type: recurring.type 
+          }
+        });
+        categoryId = firstCategory?.id || null;
+      } else {
+        categoryId = defaultCategory.id;
+      }
+    }
+
     // Create a Transaction record
     await tx.transaction.create({
       data: {
@@ -233,7 +286,7 @@ const executeRecurring = async (userId, id, isAuto = false) => {
         description: recurring.title,
         date: new Date(),
         walletId: recurring.walletId,
-        categoryId: recurring.categoryId,
+        categoryId, // ← gunakan yang sudah di-resolve
       },
     });
 
@@ -253,6 +306,31 @@ const executeRecurring = async (userId, id, isAuto = false) => {
         status: newStatus,
       },
     });
+
+    const now = new Date();
+
+    // Cari bill yang terhubung ke recurring ini
+    // yang belum PAID, tanpa filter bulan/tahun
+    // karena bill mungkin dibuat untuk bulan berbeda
+    const linkedBill = await tx.bill.findFirst({
+      where: {
+        recurringId: id,
+        status: { not: "PAID" }
+      },
+      orderBy: { dueDate: "asc" } // ambil yang paling dekat dulu
+    });
+
+    // Jika ada, mark sebagai PAID
+    if (linkedBill) {
+      await tx.bill.update({
+        where: { id: linkedBill.id },
+        data: {
+          status: "PAID",
+          paidAt: now,
+          paidAmount: linkedBill.amount
+        }
+      });
+    }
 
     return {
       ...updatedRecurring,

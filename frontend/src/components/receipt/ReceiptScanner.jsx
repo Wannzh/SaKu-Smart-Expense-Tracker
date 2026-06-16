@@ -59,10 +59,10 @@ const ReceiptScanner = memo(function ReceiptScanner({ onFileSelect, preview }) {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       className={clsx(
-        "relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
+        "relative flex flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-200 group w-full",
         preview
           ? "border-indigo-300 bg-indigo-50/30 dark:bg-indigo-900/10 p-2"
-          : "border-[var(--border-color)] bg-[var(--bg-tertiary)] p-10 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10",
+          : "border-[var(--border-color)] bg-[var(--card-bg)] p-12 cursor-pointer hover:border-indigo-600 dark:hover:border-indigo-500 transition-colors shadow-sm",
         isDragging && "border-indigo-500 bg-indigo-50 scale-[1.01]"
       )}
     >
@@ -91,19 +91,21 @@ const ReceiptScanner = memo(function ReceiptScanner({ onFileSelect, preview }) {
         </div>
       ) : (
         <>
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 mb-4">
-            <Camera className="h-7 w-7 text-indigo-600" />
+          <div className="w-20 h-20 rounded-full bg-indigo-100 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform duration-200 shadow-sm">
+            <Camera className="h-10 w-10 text-indigo-600" />
           </div>
-          <p className="text-sm font-semibold text-[var(--text-primary)] mb-1">
-            Upload foto struk
+          <h3 className="text-lg font-bold text-[var(--text-primary)] mb-2">
+            Unggah Struk
+          </h3>
+          <p className="text-sm text-[var(--text-tertiary)] text-center mb-8 px-4 max-w-xs leading-relaxed">
+            Tarik file ke sini atau klik untuk mengambil foto struk belanja Anda.
           </p>
-          <p className="text-xs text-[var(--text-tertiary)] text-center">
-            Drag & drop atau klik untuk memilih file
-          </p>
-          <div className="flex items-center gap-2 mt-4 text-xs text-[var(--text-tertiary)]">
-            <Upload className="h-3.5 w-3.5" />
-            <span>JPG, PNG, WebP • Maks. 5MB</span>
-          </div>
+          <button
+            type="button"
+            className="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
+          >
+            Scan Struk
+          </button>
         </>
       )}
     </div>

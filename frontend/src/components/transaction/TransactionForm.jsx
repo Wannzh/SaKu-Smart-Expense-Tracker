@@ -48,7 +48,7 @@ const TransactionForm = memo(function TransactionForm({
 
   const [selectedCategory, setSelectedCategory] = useState(initialData?.category || null);
   const [selectedSubCategory, setSelectedSubCategory] = useState(initialData?.subCategory || null);
-  
+
   const [selectedFromWallet, setSelectedFromWallet] = useState(null);
   const [selectedToWallet, setSelectedToWallet] = useState(null);
   const [isFromWalletPickerOpen, setIsFromWalletPickerOpen] = useState(false);
@@ -218,10 +218,14 @@ const TransactionForm = memo(function TransactionForm({
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-    
+
     const parsedAmount = parseFloat(form.amount);
     if (!parsedAmount || parsedAmount <= 0) {
       toast.error("Masukkan jumlah nominal yang valid");
+      return;
+    }
+    if (parsedAmount > 999999999999) {
+      toast.error("Nominal terlalu besar (maksimal Rp 999 Miliar)");
       return;
     }
 
@@ -240,7 +244,7 @@ const TransactionForm = memo(function TransactionForm({
     setIsLoading(true);
     try {
       const dateWithTz = dayjs(form.date).format("YYYY-MM-DDTHH:mm:ssZ");
-      
+
       const payload = {
         amount: parsedAmount,
         type: form.type,
@@ -314,11 +318,11 @@ const TransactionForm = memo(function TransactionForm({
             setIsDragging(false);
           }}
           style={{
-            transform: slideUp 
-              ? `translateY(${dragY}px)` 
+            transform: slideUp
+              ? `translateY(${dragY}px)`
               : "translateY(100%)",
-            transition: isDragging 
-              ? "none" 
+            transition: isDragging
+              ? "none"
               : "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
           className="w-full h-full lg:h-auto lg:max-w-lg bg-[var(--card-bg)] rounded-t-3xl lg:rounded-2xl shadow-xl flex flex-col max-h-[100vh] lg:max-h-[90vh] pointer-events-auto overflow-hidden border-t lg:border border-[var(--border-color)] animate-slide-up"
@@ -349,8 +353,8 @@ const TransactionForm = memo(function TransactionForm({
                         ? t === "EXPENSE"
                           ? "text-red-500 border-red-500"
                           : t === "INCOME"
-                          ? "text-emerald-500 border-emerald-500"
-                          : "text-indigo-500 border-indigo-500"
+                            ? "text-emerald-500 border-emerald-500"
+                            : "text-indigo-500 border-indigo-500"
                         : "text-[var(--text-secondary)] border-transparent hover:text-[var(--text-primary)]"
                     )}
                   >
@@ -359,7 +363,7 @@ const TransactionForm = memo(function TransactionForm({
                 );
               })}
             </div>
-            
+
             {/* Camera Button */}
             <button
               type="button"
@@ -443,7 +447,7 @@ const TransactionForm = memo(function TransactionForm({
                   <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                     Pilih Kategori
                   </h3>
-                  
+
                   {filteredCategories.length === 0 ? (
                     <p className="text-xs text-[var(--text-tertiary)] py-4 text-center">
                       Tidak ada kategori terdaftar
@@ -541,7 +545,7 @@ const TransactionForm = memo(function TransactionForm({
 
           {/* Bottom Summary Display & Inputs section */}
           <div className="shrink-0 bg-[var(--bg-secondary)] border-t border-[var(--border-color)] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-            
+
             {/* LARGE AMOUNT DISPLAY */}
             <div className="flex flex-col items-center justify-center py-4 bg-[var(--bg-primary)] border-b border-[var(--border-color)]">
               <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--text-tertiary)]">
@@ -578,7 +582,7 @@ const TransactionForm = memo(function TransactionForm({
                   className="w-full bg-transparent text-xs text-[var(--text-primary)] placeholder-[var(--text-tertiary)] outline-none border-none py-1 truncate"
                 />
               </div>
-              
+
               {/* Wallet Select (only if not a transfer) */}
               {form.type !== "TRANSFER" && (
                 <div className="shrink-0">
@@ -680,7 +684,7 @@ const TransactionForm = memo(function TransactionForm({
                 >
                   9
                 </button>
-                
+
                 {/* Date button */}
                 <button
                   type="button"
@@ -715,7 +719,7 @@ const TransactionForm = memo(function TransactionForm({
                 >
                   000
                 </button>
-                
+
                 {/* Submit button */}
                 <button
                   type="button"
@@ -732,7 +736,7 @@ const TransactionForm = memo(function TransactionForm({
               </div>
             </div>
           </div>
-          
+
           {/* Hidden Date Input */}
           <input
             ref={dateInputRef}

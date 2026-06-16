@@ -1,6 +1,6 @@
 import { memo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wallet, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import clsx from "clsx";
 
 /* ─── SVG Illustrations ──────────────────────────────────── */
@@ -163,19 +163,38 @@ const SplashScreen = memo(function SplashScreen({ onDone }) {
   }, [onDone]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-br from-indigo-600 via-indigo-700 to-indigo-800">
-      <div className="animate-fade-slide-up flex flex-col items-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/20 backdrop-blur-sm mb-5 shadow-lg">
-          <Wallet className="h-10 w-10 text-white" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden m-0 p-0 bg-indigo-splash">
+      {/* Splash Container */}
+      <div className="relative flex flex-col items-center justify-center">
+        {/* Logo Wrap with Glow Effect */}
+        <div className="splash-glow rounded-xl bg-white/5 backdrop-blur-md p-1 animate-fade-slide-up">
+          <img
+            alt="SaKu App Logo"
+            className="w-[80px] h-[80px] object-contain rounded-xl block shadow-2xl"
+            src="/saku.svg"
+          />
         </div>
-        <h1 className="text-4xl font-bold text-white tracking-tight">SaKu</h1>
-        <p className="text-indigo-200 text-sm mt-1">Smart Expense Tracker</p>
+        {/* Subtle Visual Flourish */}
+        <div className="absolute -z-10 w-[300px] h-[300px] bg-[#e2dfff]/10 rounded-full blur-[80px]"></div>
       </div>
-      {/* Subtle loading bar */}
-      <div className="absolute bottom-20 w-32 h-1 rounded-full bg-white/20 overflow-hidden">
-        <div className="h-full bg-white/60 rounded-full" style={{ animation: "loadBar 2s ease-in-out forwards" }} />
-      </div>
-      <style>{`@keyframes loadBar { from { width: 0% } to { width: 100% } }`}</style>
+      <style>{`
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.2);
+            transform: scale(1);
+          }
+          50% {
+            box-shadow: 0 0 40px 10px rgba(255, 255, 255, 0.4);
+            transform: scale(1.02);
+          }
+        }
+        .splash-glow {
+          animation: pulse-glow 3s ease-in-out infinite;
+        }
+        .bg-indigo-splash {
+          background: linear-gradient(135deg, #3525cd 0%, #1e1b4b 100%);
+        }
+      `}</style>
     </div>
   );
 });

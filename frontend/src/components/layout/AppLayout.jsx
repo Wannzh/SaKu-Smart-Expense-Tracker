@@ -32,7 +32,7 @@ const AppLayout = memo(function AppLayout({ children }) {
       )}
 
       {/* Main content */}
-      <main className={`lg:ml-64 min-h-screen p-4 lg:p-6 lg:pb-6 ${hideBottomNav ? "pb-4" : "pb-24"}`}>
+      <main className={`lg:ml-[280px] min-h-screen p-4 lg:p-6 lg:pb-6 ${hideBottomNav ? "pb-4" : "pb-24"}`}>
         {children}
       </main>
     </div>

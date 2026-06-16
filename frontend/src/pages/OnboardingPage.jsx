@@ -40,9 +40,9 @@ const StepWelcome = memo(function StepWelcome({ user }) {
       <p className="text-sm text-gray-500 mb-4">
         Perjalanan finansialmu dimulai dari sini
       </p>
-      <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-full">
-        <Wallet className="h-4 w-4 text-indigo-600" />
-        <span className="text-xs font-semibold text-indigo-600">SaKu — Smart Expense Tracker</span>
+      <div className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-950/40 px-4 py-2 rounded-full">
+        <img src="/saku.svg" className="h-4 w-4 object-contain dark:bg-white dark:rounded-md dark:p-0.5" alt="SaKu Logo" />
+        <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">SaKu — Smart Expense Tracker</span>
       </div>
     </div>
   );

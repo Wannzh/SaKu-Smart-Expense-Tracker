@@ -3,22 +3,21 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTransaction } from "../../hooks/useTransaction";
 import { useTransfer } from "../../hooks/useTransfer";
 import TransactionForm from "../transaction/TransactionForm";
-import Modal from "../common/Modal";
 import {
   LayoutDashboard,
-  CreditCard,
-  Plus,
   BarChart2,
+  Plus,
+  Wallet,
   UserCircle,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Beranda" },
-  { to: "/statistics", icon: BarChart2, label: "Statistik" },
-  null, // center placeholder
-  { to: "/wallets", icon: CreditCard, label: "Dompet" },
-  { to: "/profile", icon: UserCircle, label: "Profil" },
+  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/statistics", icon: BarChart2, label: "Stats" },
+  null, // center FAB placeholder
+  { to: "/wallets", icon: Wallet, label: "Wallet" },
+  { to: "/profile", icon: UserCircle, label: "Profile" },
 ];
 
 const BottomNav = memo(function BottomNav() {
@@ -45,54 +44,51 @@ const BottomNav = memo(function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--sidebar-bg)] border-t border-[var(--border-color)]">
-        {/* Safe area padding for notch devices */}
-        <div className="flex items-end justify-around px-2 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
-          {navItems.map((item, i) => {
-            // Center button (FAB)
-            if (item === null) {
-              return (
-                <button
-                  key="center-fab"
-                  onClick={() => setIsQuickAddOpen(true)}
-                  className="flex h-14 w-14 -translate-y-4 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200/50 dark:shadow-indigo-900/50 hover:bg-indigo-700 active:scale-95 transition-all cursor-pointer"
-                >
-                  <Plus className="h-7 w-7" />
-                </button>
-              );
-            }
-
-            const isActive =
-              item.to === "/"
-                ? location.pathname === "/"
-                : location.pathname.startsWith(item.to);
-            const Icon = item.icon;
-
+      <nav className="lg:hidden fixed bottom-0 left-0 w-full z-50 backdrop-blur-xl bg-[var(--card-bg)]/80 border-t border-[var(--border-color)]/30 flex justify-around items-center px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        {navItems.map((item, i) => {
+          if (item === null) {
             return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className="flex flex-col items-center gap-0.5 py-1 px-2 min-w-[3.5rem]"
-              >
-                <Icon
-                  className={clsx(
-                    "h-5 w-5 transition-colors",
-                    isActive ? "text-indigo-600" : "text-[var(--text-tertiary)]"
-                  )}
-                />
-                <span
-                  className={clsx(
-                    "text-[10px] font-medium transition-colors",
-                    isActive ? "text-indigo-600" : "text-[var(--text-tertiary)]"
-                  )}
+              <div key="center-fab-container" className="relative -mt-10">
+                <button
+                  onClick={() => setIsQuickAddOpen(true)}
+                  className="w-14 h-14 bg-indigo-600 text-white rounded-full shadow-lg shadow-indigo-600/20 flex items-center justify-center active:scale-90 transition-transform cursor-pointer"
                 >
-                  {item.label}
-                </span>
-              </NavLink>
+                  <Plus className="h-8 w-8" />
+                </button>
+              </div>
             );
-          })}
-        </div>
+          }
+
+          const isActive =
+            item.to === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.to);
+          const Icon = item.icon;
+
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className="flex flex-col items-center justify-center"
+            >
+              <Icon
+                className={clsx(
+                  "h-6 w-6 transition-colors",
+                  isActive ? "text-indigo-600" : "text-[var(--text-secondary)]"
+                )}
+              />
+              <span
+                className={clsx(
+                  "text-[10px] font-semibold mt-1 transition-colors",
+                  isActive ? "text-indigo-600" : "text-[var(--text-secondary)]"
+                )}
+              >
+                {item.label}
+              </span>
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Quick Add Form */}

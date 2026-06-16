@@ -13,6 +13,8 @@ const budgetRoutes = require("./budget.route");
 const debtRoutes = require("./debt.route");
 const wishlistRoutes = require("./wishlist.route");
 const recurringRoutes = require("./recurring.route");
+const cardRoutes = require("./card.route");
+const billRoutes = require("./bill.route");
 
 router.use("/auth", authRoutes);
 router.use("/transactions", transactionRoutes);
@@ -25,5 +27,7 @@ router.use("/budgets", budgetRoutes);
 router.use("/debts", debtRoutes);
 router.use("/wishlists", wishlistRoutes);
 router.use("/recurrings", recurringRoutes);
+router.use("/cards", cardRoutes);
+router.use("/bills", billRoutes);
 
 module.exports = router;

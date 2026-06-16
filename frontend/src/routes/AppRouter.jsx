@@ -25,6 +25,8 @@ const BudgetPage = lazy(() => import("../pages/BudgetPage"));
 const DebtPage = lazy(() => import("../pages/DebtPage"));
 const WishlistPage = lazy(() => import("../pages/WishlistPage"));
 const RecurringPage = lazy(() => import("../pages/RecurringPage"));
+const CardsPage = lazy(() => import("../pages/CardsPage"));
+const BillsPage = lazy(() => import("../pages/BillsPage"));
 
 
 /**
@@ -217,6 +219,22 @@ export default function AppRouter() {
             element={
               <ProtectedPage>
                 <RecurringPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/cards"
+            element={
+              <ProtectedPage>
+                <CardsPage />
+              </ProtectedPage>
+            }
+          />
+          <Route
+            path="/bills"
+            element={
+              <ProtectedPage>
+                <BillsPage />
               </ProtectedPage>
             }
           />

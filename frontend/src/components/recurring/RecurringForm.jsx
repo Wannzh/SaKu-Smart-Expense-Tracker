@@ -7,6 +7,7 @@ import { formatCurrency, formatDate } from "../../utils/format";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import * as LucideIcons from "lucide-react";
+import { useCategory } from "../../hooks/useCategory";
 
 const walletIconMap = {
   cash: Banknote,
@@ -154,6 +155,7 @@ const RecurringForm = memo(function RecurringForm({
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [walletId, setWalletId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
   const [imageFile, setImageFile] = useState(null);
   
@@ -164,6 +166,19 @@ const RecurringForm = memo(function RecurringForm({
   const [errors, setErrors] = useState({});
 
   const fileInputRef = useRef(null);
+
+  const { categories, getCategories } = useCategory();
+
+  useEffect(() => {
+    if (isOpen) {
+      getCategories();
+    }
+  }, [isOpen, getCategories]);
+
+  const filteredCategories = useMemo(() => {
+    if (!categories) return [];
+    return categories.filter((c) => c.type === type);
+  }, [categories, type]);
 
   const selectedWallet = useMemo(() => {
     return wallets.find((w) => w.id === walletId);
@@ -179,6 +194,7 @@ const RecurringForm = memo(function RecurringForm({
       setStartDate(recurring.startDate ? new Date(recurring.startDate) : null);
       setEndDate(recurring.endDate ? new Date(recurring.endDate) : null);
       setWalletId(recurring.walletId || "");
+      setCategoryId(recurring.categoryId || "");
       setPreviewUrl(recurring.iconUrl || "");
       setImageFile(null);
     } else {
@@ -189,6 +205,7 @@ const RecurringForm = memo(function RecurringForm({
       setStartDate(new Date()); // default start date is today
       setEndDate(null);
       setWalletId("");
+      setCategoryId("");
       setPreviewUrl("");
       setImageFile(null);
     }
@@ -281,6 +298,9 @@ const RecurringForm = memo(function RecurringForm({
     }
     if (walletId) {
       formData.append("walletId", walletId);
+    }
+    if (categoryId) {
+      formData.append("categoryId", categoryId);
     }
     if (imageFile) {
       formData.append("image", imageFile);
@@ -411,6 +431,53 @@ const RecurringForm = memo(function RecurringForm({
                 <option value="MONTHLY">Bulanan (Monthly)</option>
                 <option value="YEARLY">Tahunan (Yearly)</option>
               </select>
+            </div>
+
+            {/* Kategori */}
+            <div className="flex flex-col gap-1.5 w-full">
+              <label className="text-[10px] uppercase font-bold text-[var(--text-tertiary)] tracking-wider">
+                Kategori (Opsional)
+              </label>
+              
+              {/* Horizontal scroll pills */}
+              <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {/* Pill "Tidak ada" */}
+                <button
+                  type="button"
+                  onClick={() => setCategoryId("")}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold 
+                    whitespace-nowrap transition-colors border shrink-0
+                    ${!categoryId
+                      ? "bg-indigo-600 border-indigo-600 text-white"
+                      : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-transparent"
+                    }`}
+                >
+                  Semua
+                </button>
+                {filteredCategories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setCategoryId(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold 
+                      whitespace-nowrap transition-colors border shrink-0
+                      flex items-center gap-1.5
+                      ${categoryId === cat.id
+                        ? "bg-indigo-600 border-indigo-600 text-white"
+                        : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-transparent hover:border-[var(--border-color)]"
+                      }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Jika tidak ada kategori tersedia */}
+              {filteredCategories.length === 0 && (
+                <p className="text-[10px] text-[var(--text-tertiary)] px-1">
+                  Tidak ada kategori untuk tipe ini
+                </p>
+              )}
             </div>
 
             {/* Date Pickers Grid */}

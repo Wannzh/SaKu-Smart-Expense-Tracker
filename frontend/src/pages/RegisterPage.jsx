@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/useAuth";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import toast from "react-hot-toast";
-import { Wallet } from "lucide-react";
 
 const RegisterPage = memo(function RegisterPage() {
   const { register } = useAuth();
@@ -63,8 +62,8 @@ const RegisterPage = memo(function RegisterPage() {
       <div className="w-full max-w-md animate-fade-slide-up">
         {/* Logo & Tagline */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 mb-4 shadow-lg shadow-indigo-200/60">
-            <Wallet className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white dark:bg-white border border-gray-100 dark:border-transparent mb-4 shadow-lg shadow-gray-200/40 dark:shadow-none p-2">
+            <img src="/saku.svg" className="w-full h-full object-contain" alt="SaKu Logo" />
           </div>
           <h1 className="text-3xl font-bold text-indigo-600 tracking-tight">
             SaKu

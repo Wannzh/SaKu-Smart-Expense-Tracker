@@ -1,4 +1,5 @@
 import { memo, useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTransaction } from "../hooks/useTransaction";
 import { useTransfer } from "../hooks/useTransfer";
 import { useWallet } from "../hooks/useWallet";
@@ -104,6 +105,7 @@ const CustomTrendTooltip = memo(function CustomTrendTooltip({ active, payload, l
 
 // ─── Main Component ───────────────────────────────────────────
 const StatisticsPage = memo(function StatisticsPage() {
+  const navigate = useNavigate();
   const { transactions, getTransactions, isLoading: txLoading } = useTransaction();
   const { transfers, getTransfers, isLoading: tfLoading } = useTransfer();
   const { wallets, getWallets, isLoading: wlLoading } = useWallet();
@@ -419,454 +421,412 @@ const StatisticsPage = memo(function StatisticsPage() {
     });
   }, [wallets, filteredTransactions, filteredTransfers]);
 
+  const periodPercentageChange = useMemo(() => {
+    const now = dayjs();
+    let currentStart, currentEnd, prevStart, prevEnd;
+
+    if (activePeriod === "Minggu") {
+      currentStart = now.startOf("week");
+      currentEnd = now.endOf("week");
+      prevStart = now.subtract(1, "week").startOf("week");
+      prevEnd = now.subtract(1, "week").endOf("week");
+    } else if (activePeriod === "Bulan") {
+      currentStart = now.startOf("month");
+      currentEnd = now.endOf("month");
+      prevStart = now.subtract(1, "month").startOf("month");
+      prevEnd = now.subtract(1, "month").endOf("month");
+    } else if (activePeriod === "3 Bulan") {
+      currentStart = now.subtract(3, "month");
+      currentEnd = now;
+      prevStart = now.subtract(6, "month");
+      prevEnd = now.subtract(3, "month");
+    } else if (activePeriod === "Tahun") {
+      currentStart = now.startOf("year");
+      currentEnd = now.endOf("year");
+      prevStart = now.subtract(1, "year").startOf("year");
+      prevEnd = now.subtract(1, "year").endOf("year");
+    } else {
+      return null;
+    }
+
+    const currentTotal = transactions
+      .filter((tx) => {
+        const d = dayjs(tx.date);
+        return tx.type === activeType && d.isAfter(currentStart) && d.isBefore(currentEnd);
+      })
+      .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+    const prevTotal = transactions
+      .filter((tx) => {
+        const d = dayjs(tx.date);
+        return tx.type === activeType && d.isAfter(prevStart) && d.isBefore(prevEnd);
+      })
+      .reduce((sum, tx) => sum + Number(tx.amount || 0), 0);
+
+    if (prevTotal === 0) {
+      return currentTotal > 0 ? { value: 100, isPositive: true } : { value: 0, isPositive: true };
+    }
+
+    const pct = ((currentTotal - prevTotal) / prevTotal) * 100;
+    return {
+      value: Math.abs(Math.round(pct)),
+      isPositive: pct >= 0
+    };
+  }, [transactions, activePeriod, activeType]);
+
+  const aiInsight = useMemo(() => {
+    if (filteredTransactions.length === 0) {
+      return {
+        text: "Belum ada data transaksi periode ini. Catat transaksi baru untuk mendapatkan insight analisis finansial dari AI!",
+        category: "Umum",
+      };
+    }
+
+    const expenseTransactions = filteredTransactions.filter(t => t.type === "EXPENSE");
+    if (expenseTransactions.length === 0) {
+      return {
+        text: "Luar biasa! Anda belum memiliki pengeluaran di periode ini. Pertahankan pengelolaan arus kas positif Anda!",
+        category: "Umum",
+      };
+    }
+
+    // Find highest expense category
+    const categories = categorySummary.list;
+    if (categories.length > 0) {
+      const topCat = categories[0];
+      const topCatName = topCat.name;
+      const topCatAmount = topCat.amount;
+      const topCatPercentage = topCat.percentage.toFixed(0);
+
+      if (topCatPercentage > 40) {
+        return {
+          text: `Kategori "${topCatName}" mendominasi pengeluaran Anda sebesar ${topCatPercentage}% (${formatCurrency(topCatAmount)}). Pertimbangkan untuk membatasi pengeluaran kategori ini agar anggaran bulanan tetap aman.`,
+          category: topCatName,
+        };
+      } else {
+        return {
+          text: `Pengeluaran terbesar Anda ada pada "${topCatName}" sebesar ${formatCurrency(topCatAmount)} (${topCatPercentage}% dari total). Pembagian alokasi pengeluaran Anda sudah cukup merata.`,
+          category: topCatName,
+        };
+      }
+    }
+
+    return {
+      text: "Arus kas Anda terpantau stabil. Pastikan untuk selalu menyisihkan minimal 10% pemasukan ke tabungan darurat.",
+      category: "Umum",
+    };
+  }, [filteredTransactions, categorySummary]);
+
   return (
-    <div className="animate-fade-slide-up pb-24">
-      {/* Header & Date Toggle */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Statistik</h1>
-          <p className="text-sm text-[var(--text-tertiary)] mt-1">Analisis keuanganmu</p>
-        </div>
-        <div className="flex items-center gap-1.5 self-start sm:self-auto bg-[var(--card-bg)] border border-[var(--border-color)] p-1 rounded-full">
-          {["Minggu", "Bulan", "3 Bulan", "Tahun"].map((period) => (
-            <button
-              key={period}
-              onClick={() => setActivePeriod(period)}
-              className={clsx(
-                "rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer",
-                activePeriod === period
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-[var(--text-secondary)] hover:text-indigo-600 hover:bg-[var(--bg-primary)]"
-              )}
-            >
-              {period}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Toggle Pemasukan/Pengeluaran */}
-      <div className="flex items-center gap-2 mb-6">
-        <button
-          onClick={() => setActiveType("INCOME")}
-          className={clsx(
-            "rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer border",
-            activeType === "INCOME"
-              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500"
-              : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-transparent"
-          )}
-        >
-          Pemasukan
-        </button>
-        <button
-          onClick={() => setActiveType("EXPENSE")}
-          className={clsx(
-            "rounded-full px-4 py-1.5 text-xs font-semibold transition-all cursor-pointer border",
-            activeType === "EXPENSE"
-              ? "bg-red-500/20 text-red-600 dark:text-red-400 border-red-500"
-              : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border-transparent"
-          )}
-        >
-          Pengeluaran
-        </button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {/* SECTION 1: Period Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Income Card */}
-            <div
-              className={clsx(
-                "rounded-2xl border p-5 transition-all duration-200",
-                activeType === "INCOME"
-                  ? "border-emerald-500 bg-emerald-500/[0.03] shadow-md dark:bg-emerald-500/[0.02]"
-                  : "border-[var(--border-color)] bg-[var(--card-bg)] hover:shadow-sm"
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Pemasukan
-                </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                {formatCurrency(filteredIncome)}
-              </p>
-            </div>
-
-            {/* Expense Card */}
-            <div
-              className={clsx(
-                "rounded-2xl border p-5 transition-all duration-200",
-                activeType === "EXPENSE"
-                  ? "border-red-500 bg-red-500/[0.03] shadow-md dark:bg-red-500/[0.02]"
-                  : "border-[var(--border-color)] bg-[var(--card-bg)] hover:shadow-sm"
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Pengeluaran
-                </span>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950/30 text-red-500">
-                  <TrendingDown className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="text-xl font-bold text-red-500 dark:text-red-400 tabular-nums">
-                {formatCurrency(filteredExpense)}
-              </p>
-            </div>
-
-            {/* Net Card */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 transition-all hover:shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">
-                  Selisih
-                </span>
-                <div
-                  className={clsx(
-                    "flex h-8 w-8 items-center justify-center rounded-lg",
-                    isNetPositive
-                      ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500"
-                      : "bg-red-50 dark:bg-red-950/30 text-red-500"
-                  )}
-                >
-                  <Wallet className="h-4 w-4" />
-                </div>
-              </div>
-              <p
-                className={clsx(
-                  "text-xl font-bold tabular-nums",
-                  isNetPositive
-                    ? "text-indigo-600 dark:text-indigo-400"
-                    : "text-red-500 dark:text-red-400"
-                )}
+    <>
+      {/* MOBILE LAYOUT */}
+      <div className="block lg:hidden min-h-screen text-[var(--text-primary)] -mx-4 -mt-4 pb-24">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+          </div>
+        ) : (
+          <>
+            {/* Top AppBar Mobile */}
+            <header className="sticky top-0 z-40 bg-[var(--card-bg)]/80 backdrop-blur-xl px-4 py-4 flex justify-between items-center border-b border-[var(--border-color)]/30 mb-4 transition-all">
+              <h1 className="text-xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400">Statistik</h1>
+              <button 
+                onClick={() => navigate("/export")}
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-[var(--bg-tertiary)] hover:bg-[var(--border-color)]/30 transition-colors cursor-pointer shrink-0"
               >
-                {isNetPositive ? "+" : ""}
-                {formatCurrency(netValue)}
-              </p>
-            </div>
-          </div>
+                <LucideIcons.SlidersHorizontal className="w-5 h-5 text-[var(--text-secondary)]" />
+              </button>
+            </header>
 
-          {/* SECTION 2: Income vs Expense Bar Chart */}
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <BarIcon className="h-4 w-4 text-indigo-500" />
-              <h2 className="text-base font-bold text-[var(--text-primary)]">
-                Perbandingan Arus Kas
-              </h2>
-            </div>
-            <div className="h-[200px] lg:h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--text-tertiary)" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis
-                    stroke="var(--text-tertiary)"
-                    fontSize={10}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => formatCompactNumber(v)}
-                  />
-                  <Tooltip content={<CustomChartTooltip />} cursor={{ fill: "var(--bg-tertiary)", opacity: 0.15 }} />
-                  <Legend verticalAlign="top" height={36} iconSize={8} iconType="circle" />
-                  <Bar
-                    dataKey="Pemasukan"
-                    fill="#10B981"
-                    radius={[4, 4, 0, 0]}
-                    barSize={activePeriod === "Bulan" ? 6 : 12}
-                  />
-                  <Bar
-                    dataKey="Pengeluaran"
-                    fill="#EF4444"
-                    radius={[4, 4, 0, 0]}
-                    barSize={activePeriod === "Bulan" ? 6 : 12}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+            <div className="px-4 space-y-6">
 
-          {/* Grid for Donut Chart & Trend Chart */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* SECTION 3: Category Donut Chart & List (Redesigned) */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <PieIcon className="h-4 w-4 text-indigo-500" />
-                  <h2 className="text-base font-bold text-[var(--text-primary)]">
-                    Distribusi {activeType === "INCOME" ? "Pemasukan" : "Pengeluaran"}
-                  </h2>
-                </div>
+            {/* Period Pills */}
+            <section className="flex gap-2 overflow-x-auto scrollbar-none -mx-4 px-4">
+              {["Minggu", "Bulan", "3 Bulan", "Tahun"].map((period) => {
+                const isActive = activePeriod === period;
+                return (
+                  <button
+                    key={period}
+                    onClick={() => setActivePeriod(period)}
+                    className={clsx(
+                      "px-5 py-2 rounded-full font-semibold text-xs whitespace-nowrap transition-all duration-200 active:scale-95",
+                      isActive
+                        ? "bg-indigo-600 text-white shadow-sm font-bold"
+                        : "bg-[var(--bg-tertiary)] text-[var(--text-secondary)]"
+                    )}
+                  >
+                    {period}
+                  </button>
+                );
+              })}
+            </section>
 
-                {categorySummary.list.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <p className="text-sm text-[var(--text-tertiary)]">
-                      Tidak ada {activeType === "INCOME" ? "pemasukan" : "pengeluaran"} di periode ini
-                    </p>
+            {/* Type Toggle */}
+            <section className="flex bg-[var(--bg-tertiary)]/50 p-1 rounded-xl border border-[var(--border-color)]/30">
+              {[
+                { label: "Pemasukan", value: "INCOME" },
+                { label: "Pengeluaran", value: "EXPENSE" }
+              ].map((type) => {
+                const isActive = activeType === type.value;
+                return (
+                  <button
+                    key={type.value}
+                    onClick={() => setActiveType(type.value)}
+                    className={clsx(
+                      "flex-1 py-2 text-center font-semibold text-xs rounded-lg transition-all duration-200",
+                      isActive
+                        ? "bg-[var(--card-bg)] text-indigo-600 dark:text-indigo-400 shadow-sm border border-[var(--border-color)]/50 font-bold"
+                        : "text-[var(--text-secondary)] active:scale-[0.98]"
+                    )}
+                  >
+                    {type.label}
+                  </button>
+                );
+              })}
+            </section>
+
+            {/* Summary 3 Small Cards */}
+            <section className="grid grid-cols-3 gap-3">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex flex-col items-center">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-1">Masuk</span>
+                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-400 leading-none tabular-nums">
+                  {formatCompactNumber(filteredIncome)}
+                </span>
+              </div>
+              <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex flex-col items-center">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-500 mb-1">Keluar</span>
+                <span className="text-lg font-bold text-rose-500 leading-none tabular-nums">
+                  {formatCompactNumber(filteredExpense)}
+                </span>
+              </div>
+              <div className="bg-indigo-600/10 border border-indigo-600/20 p-3 rounded-xl flex flex-col items-center">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-1">Bersih</span>
+                <span className={clsx(
+                  "text-lg font-bold leading-none tabular-nums",
+                  isNetPositive ? "text-indigo-600 dark:text-indigo-400" : "text-rose-500"
+                )}>
+                  {isNetPositive ? "+" : ""}{formatCompactNumber(netValue)}
+                </span>
+              </div>
+            </section>
+
+            {/* Bar Chart: Perbandingan Arus Kas */}
+            <section className="bg-[var(--card-bg)] border border-[var(--border-color)]/50 rounded-xl p-4 shadow-sm relative overflow-hidden">
+              <div 
+                className="absolute top-0 right-0 w-16 h-16 text-[var(--border-color)]/10 opacity-40 pointer-events-none"
+                style={{ backgroundImage: "repeating-linear-gradient(90deg, currentColor 0px, currentColor 1px, transparent 1px, transparent 8px)" }}
+              />
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-bold text-[var(--text-primary)]">Perbandingan Arus Kas</h3>
+                <LucideIcons.Info className="w-4 h-4 text-[var(--text-tertiary)]" />
+              </div>
+              <div className="flex items-end justify-between h-40 gap-2 px-1 overflow-x-auto scrollbar-none">
+                {barChartData.length === 0 ? (
+                  <div className="flex items-center justify-center w-full h-full text-xs text-[var(--text-tertiary)]">
+                    Tidak ada data
                   </div>
                 ) : (
-                  <div className="space-y-6">
-                    {/* Top Part: Donut Chart + Legend */}
-                    <div className="flex flex-col md:flex-row items-center justify-center md:justify-around gap-6">
-                      {/* Left: Donut Chart */}
-                      <div className="relative h-[180px] w-[180px] shrink-0 flex items-center justify-center">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={categorySummary.list}
-                              dataKey="amount"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={55}
-                              outerRadius={70}
-                              paddingAngle={2}
-                            >
-                              {categorySummary.list.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value) => [formatCurrency(value), activeType === "INCOME" ? "Pemasukan" : "Pengeluaran"]}
-                              contentStyle={{
-                                backgroundColor: "var(--card-bg)",
-                                borderColor: "var(--border-color)",
-                                color: "var(--text-primary)",
-                                borderRadius: "0.75rem",
-                                fontSize: "12px",
-                              }}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[100px]">
-                          <p className="text-[10px] uppercase font-bold tracking-wider text-[var(--text-tertiary)] leading-tight">
-                            Total
-                          </p>
-                          <p className="text-sm font-bold text-[var(--text-primary)] mt-0.5 truncate leading-tight tabular-nums" title={formatCurrency(categorySummary.total)}>
-                            {formatCompactNumber(categorySummary.total)}
-                          </p>
+                  barChartData.map((item, idx) => {
+                    const maxVal = Math.max(...barChartData.map(d => Math.max(d.Pemasukan, d.Pengeluaran))) || 1;
+                    const incomeHeight = `${Math.max(4, Math.round((item.Pemasukan / maxVal) * 70))}px`;
+                    const expenseHeight = `${Math.max(4, Math.round((item.Pengeluaran / maxVal) * 70))}px`;
+
+                    return (
+                      <div key={idx} className="flex-1 min-w-[24px] flex flex-col items-center gap-1 group relative">
+                        <div className="w-full flex flex-col items-center gap-0.5">
+                          <div 
+                            className="w-full bg-emerald-500 rounded-t-sm transition-all duration-300 group-hover:bg-emerald-600 cursor-pointer" 
+                            style={{ height: incomeHeight }}
+                            title={`Masuk: ${formatCurrency(item.Pemasukan)}`}
+                          />
+                          <div 
+                            className="w-full bg-rose-500 rounded-b-sm transition-all duration-300 group-hover:bg-rose-600 cursor-pointer" 
+                            style={{ height: expenseHeight }}
+                            title={`Keluar: ${formatCurrency(item.Pengeluaran)}`}
+                          />
+                        </div>
+                        <span className="text-[9px] text-[var(--text-tertiary)] truncate w-full text-center">
+                          {item.name}
+                        </span>
+                        {/* Interactive Tooltip on hover */}
+                        <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-50">
+                          <div className="bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] text-[10px] rounded-lg p-2 shadow-lg whitespace-nowrap">
+                            <p className="font-bold border-b border-[var(--border-color)] pb-1 mb-1 text-center">{item.name}</p>
+                            <p className="text-emerald-600 dark:text-emerald-400">Masuk: {formatCurrency(item.Pemasukan)}</p>
+                            <p className="text-rose-500">Keluar: {formatCurrency(item.Pengeluaran)}</p>
+                          </div>
+                          <div className="w-2 h-2 bg-[var(--bg-secondary)] border-r border-b border-[var(--border-color)] rotate-45 -mt-1"></div>
                         </div>
                       </div>
-
-                      {/* Right: Legend */}
-                      <div className="flex-1 grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3 w-full max-w-xs">
-                        {categorySummary.list.slice(0, 6).map((cat) => (
-                          <div key={cat.id} className="flex items-center gap-2 text-xs">
-                            <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
-                            <span className="truncate text-[var(--text-primary)] font-medium max-w-[100px] md:max-w-none">
-                              {cat.name}
-                            </span>
-                            <span className="text-[var(--text-tertiary)] font-bold tabular-nums">
-                              ({cat.percentage.toFixed(0)}%)
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-px bg-[var(--border-color)]" />
-
-                    {/* Bottom Part: Category list with Progress bars */}
-                    <div className="space-y-4">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-tertiary)]">
-                        Rincian Kategori
-                      </h3>
-                      <div className="space-y-3.5">
-                        {categorySummary.list.map((cat) => {
-                          const CatIcon = LucideIcons[cat.icon] || LucideIcons.Tag;
-                          return (
-                            <div key={cat.id} className="flex items-center gap-4">
-                              {/* Dynamic Icon */}
-                              <div
-                                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
-                                style={{ backgroundColor: `${cat.color}15` }}
-                              >
-                                <CatIcon className="h-4.5 w-4.5" style={{ color: cat.color }} />
-                              </div>
-
-                              {/* Progress bar and text details */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between text-xs font-semibold text-[var(--text-primary)] mb-1">
-                                  <span className="truncate">{cat.name}</span>
-                                </div>
-                                <div className="h-1.5 w-full rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-500"
-                                    style={{
-                                      width: `${cat.percentage}%`,
-                                      backgroundColor: cat.color,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Percentage and Amount */}
-                              <div className="text-right shrink-0">
-                                <p className="text-xs font-bold text-[var(--text-primary)] tabular-nums">
-                                  {cat.percentage.toFixed(0)}%
-                                </p>
-                                <p className="text-[10px] text-[var(--text-tertiary)] font-semibold tabular-nums mt-0.5">
-                                  {formatCurrency(cat.amount)}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
+                    );
+                  })
                 )}
               </div>
-            </div>
+            </section>
 
-            {/* SECTION 4: Expense Trend Line/Area Chart */}
-            <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <TrendIcon className="h-4 w-4 text-indigo-500" />
-                <h2 className="text-base font-bold text-[var(--text-primary)]">
-                  Tren Akumulasi {activeType === "EXPENSE" ? "Pengeluaran" : "Pemasukan"}
-                </h2>
-              </div>
-              <div className="h-[200px] lg:h-[220px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0.2} />
-                        <stop offset="95%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
-                    <XAxis
-                      dataKey="name"
-                      stroke="var(--text-tertiary)"
-                      fontSize={11}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="var(--text-tertiary)"
-                      fontSize={10}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => formatCompactNumber(v)}
-                    />
-                    <Tooltip
-                      content={<CustomTrendTooltip isYearly={activePeriod === "Tahun"} activeType={activeType} />}
-                      cursor={{ stroke: "var(--border-color)", strokeWidth: 1 }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="Akumulasi"
-                      stroke={activeType === "EXPENSE" ? "#EF4444" : "#10B981"}
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorTrend)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
+            {/* Donut Chart: Distribusi Pengeluaran / Pemasukan */}
+            <section className="bg-[var(--card-bg)] border border-[var(--border-color)]/50 rounded-xl p-4 shadow-sm">
+              <h3 className="text-xs font-bold text-[var(--text-primary)] mb-6">
+                Distribusi {activeType === "INCOME" ? "Pemasukan" : "Pengeluaran"}
+              </h3>
+              {categorySummary.list.length === 0 ? (
+                <div className="text-center py-8 text-xs text-[var(--text-tertiary)]">
+                  Tidak ada data {activeType === "INCOME" ? "pemasukan" : "pengeluaran"} di periode ini
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-center items-center relative mb-8">
+                    {/* SVG Donut */}
+                    <svg className="w-48 h-48 -rotate-90">
+                      <circle 
+                        className="text-[var(--bg-tertiary)]" 
+                        cx="96" 
+                        cy="96" 
+                        fill="transparent" 
+                        r="80" 
+                        stroke="currentColor" 
+                        strokeWidth="14"
+                      />
+                      {(() => {
+                        let currentOffsetAccumulator = 0;
+                        return categorySummary.list.map((cat, index) => {
+                          const strokeLength = (cat.percentage / 100) * 502.655;
+                          const strokeOffset = -currentOffsetAccumulator;
+                          currentOffsetAccumulator += strokeLength;
+                          return (
+                            <circle
+                              key={cat.id}
+                              cx="96"
+                              cy="96"
+                              fill="transparent"
+                              r="80"
+                              stroke={cat.color}
+                              strokeWidth="14"
+                              strokeDasharray={`${strokeLength} 502.655`}
+                              strokeDashoffset={strokeOffset}
+                              strokeLinecap="round"
+                              className="transition-all duration-500 hover:stroke-[16px] cursor-pointer"
+                            />
+                          );
+                        });
+                      })()}
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <span className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-widest">Total</span>
+                      <span className="text-sm sm:text-base font-bold text-[var(--text-primary)] mt-0.5 tabular-nums">
+                        {formatCurrency(categorySummary.total)}
+                      </span>
+                    </div>
+                  </div>
 
-          {/* SECTION 5: Wallet Activity Summary List */}
-          <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <WalletActivityIcon className="h-4 w-4 text-indigo-500" />
-              <h2 className="text-base font-bold text-[var(--text-primary)]">
-                Aktivitas Dompet & Rekening
-              </h2>
-            </div>
+                  {/* Legend with Progress Bars */}
+                  <div className="space-y-4">
+                    {categorySummary.list.map((cat) => (
+                      <div key={cat.id} className="space-y-1">
+                        <div className="flex justify-between text-xs font-medium">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }}></span>
+                            <span className="text-[var(--text-primary)]">{cat.name}</span>
+                          </div>
+                          <span className="text-[var(--text-primary)] font-bold tabular-nums">{cat.percentage.toFixed(0)}%</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500" 
+                            style={{ width: `${cat.percentage}%`, backgroundColor: cat.color }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
 
-            {walletSummaries.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-sm text-[var(--text-tertiary)]">Tidak ada dompet terdaftar</p>
+            {/* Area Chart: Tren Akumulasi */}
+            <section className="bg-[var(--card-bg)] border border-[var(--border-color)]/50 rounded-xl p-4 shadow-sm overflow-hidden relative">
+              <h3 className="text-xs font-bold text-[var(--text-primary)] mb-2">Tren Akumulasi</h3>
+              <p className="text-[10px] text-[var(--text-tertiary)] mb-6">Pertumbuhan saldo bersih dalam 30 hari terakhir</p>
+              <div className="h-40 w-full relative">
+                {trendData.length === 0 ? (
+                  <div className="flex items-center justify-center h-full text-xs text-[var(--text-tertiary)]">
+                    Tidak ada data
+                  </div>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -25, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="mobileColorTrend" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0.2} />
+                          <stop offset="95%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="var(--text-tertiary)" 
+                        fontSize={9} 
+                        tickLine={false} 
+                        axisLine={false} 
+                      />
+                      <YAxis
+                        stroke="var(--text-tertiary)"
+                        fontSize={8}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => formatCompactNumber(v)}
+                      />
+                      <Tooltip 
+                        content={<CustomTrendTooltip isYearly={activePeriod === "Tahun"} activeType={activeType} />} 
+                        cursor={{ stroke: "var(--border-color)", strokeWidth: 1 }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="Akumulasi"
+                        stroke={activeType === "EXPENSE" ? "#EF4444" : "#10B981"}
+                        strokeWidth={2.5}
+                        fillOpacity={1}
+                        fill="url(#mobileColorTrend)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                )}
+                <div className="absolute top-2 right-2 bg-indigo-600/10 border border-indigo-600/20 px-2 py-1 rounded text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                  {periodPercentageChange 
+                    ? `${periodPercentageChange.isPositive ? "+" : "-"}${periodPercentageChange.value}%`
+                    : "+0%"}
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            </section>
+
+            {/* Wallet Activity */}
+            <section className="pb-6">
+              <h3 className="text-xs font-bold text-[var(--text-primary)] mb-4">Aktivitas Dompet</h3>
+              <div className="grid grid-cols-2 gap-4">
                 {walletSummaries.map((w) => {
                   const WalletIcon = walletIconMap[w.type] || Banknote;
                   return (
-                    <div
-                      key={w.id}
-                      className="border border-[var(--border-color)] bg-[var(--bg-primary)] rounded-xl p-4 flex flex-col justify-between"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-3">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div
-                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
-                            style={{ backgroundColor: w.color }}
-                          >
-                            <WalletIcon className="h-4.5 w-4.5" />
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="text-sm font-bold text-[var(--text-primary)] truncate">
-                              {w.name}
-                            </h3>
-                            <span className="text-[10px] text-[var(--text-tertiary)] font-semibold uppercase">
-                              {w.type === "cash" ? "Tunai" : w.type === "bank" ? "Bank" : "E-Wallet"}
-                            </span>
-                          </div>
+                    <div key={w.id} className="bg-[var(--card-bg)] border border-[var(--border-color)]/50 p-4 rounded-xl shadow-sm">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div 
+                          className="w-8 h-8 rounded-lg flex items-center justify-center"
+                          style={{ backgroundColor: `${w.color}15` }}
+                        >
+                          <WalletIcon className="w-4.5 h-4.5" style={{ color: w.color }} />
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-bold text-[var(--text-primary)] tabular-nums">
-                            {formatCurrency(w.balance)}
-                          </p>
-                          <span className="text-[10px] text-[var(--text-tertiary)] font-medium">
-                            Saldo Saat Ini
-                          </span>
-                        </div>
+                        <span className="text-xs font-semibold text-[var(--text-primary)] truncate">{w.name}</span>
                       </div>
-
-                      {/* Cashflow Summary */}
-                      <div className="grid grid-cols-2 gap-2 text-xs mb-3 border-t border-[var(--border-color)] pt-3">
-                        <div>
-                          <p className="text-[10px] text-[var(--text-tertiary)] font-medium mb-0.5">
-                            Dana Masuk
-                          </p>
-                          <p className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                            +{formatCurrency(w.income)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-[var(--text-tertiary)] font-medium mb-0.5">
-                            Dana Keluar
-                          </p>
-                          <p className="font-bold text-red-500 dark:text-red-400 tabular-nums">
-                            -{formatCurrency(w.expense)}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar of Outflow/Inflow Ratio */}
                       <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className="text-[var(--text-secondary)] font-medium">Rasio Pengeluaran</span>
-                          <span className="font-bold text-[var(--text-primary)] tabular-nums">
-                            {w.ratio.toFixed(0)}%
-                          </span>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-xs font-bold text-[var(--text-primary)] tabular-nums">{w.ratio.toFixed(0)}%</span>
+                          <span className="text-[10px] text-[var(--text-tertiary)] tabular-nums">{formatCompactNumber(w.balance)}</span>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
-                          <div
-                            className={clsx(
-                              "h-full rounded-full transition-all duration-500",
-                              w.ratio > 100
-                                ? "bg-red-600"
-                                : w.ratio > 80
-                                ? "bg-red-500"
-                                : w.ratio > 50
-                                ? "bg-amber-500"
-                                : "bg-indigo-600"
-                            )}
-                            style={{ width: `${Math.min(w.ratio, 100)}%` }}
+                        <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500" 
+                            style={{ 
+                              width: `${Math.min(w.ratio, 100)}%`, 
+                              backgroundColor: w.color 
+                            }}
                           />
                         </div>
                       </div>
@@ -874,11 +834,435 @@ const StatisticsPage = memo(function StatisticsPage() {
                   );
                 })}
               </div>
-            )}
+            </section>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* DESKTOP LAYOUT */}
+      <div className="hidden lg:block animate-fade-slide-up pb-24 max-w-container-max mx-auto space-y-6">
+        {/* Header */}
+        <header className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">Statistik</h2>
+            <p className="text-sm text-[var(--text-tertiary)] mt-1">Analisis mendalam pengeluaran dan arus kas Anda</p>
           </div>
-        </div>
-      )}
-    </div>
+          <button
+            onClick={() => navigate("/export")}
+            className="bg-[var(--card-bg)] hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] border border-[var(--border-color)] px-4 py-2.5 rounded-xl flex items-center gap-2 font-semibold text-xs transition-colors cursor-pointer shadow-sm animate-pulse-glow"
+          >
+            <LucideIcons.FileDown className="w-4.5 h-4.5 text-[var(--text-secondary)]" />
+            <span>Laporan PDF</span>
+          </button>
+        </header>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-600 dark:text-indigo-400" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Column */}
+            <div className="col-span-12 lg:col-span-5 flex flex-col space-y-6">
+              
+              {/* Period & Type Toggles */}
+              <div className="flex flex-col space-y-4">
+                {/* Period Toggle */}
+                <div className="bg-[var(--bg-tertiary)] dark:bg-slate-800/80 p-1 rounded-xl flex">
+                  {["Minggu", "Bulan", "3 Bulan", "Tahun"].map((period) => {
+                    const isActive = activePeriod === period;
+                    return (
+                      <button
+                        key={period}
+                        onClick={() => setActivePeriod(period)}
+                        className={clsx(
+                          "flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center",
+                          isActive
+                            ? "bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm font-bold"
+                            : "text-[var(--text-secondary)] hover:text-indigo-600 dark:hover:text-indigo-400"
+                        )}
+                      >
+                        {period}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Type Toggle */}
+                <div className="bg-[var(--bg-tertiary)] dark:bg-slate-800/80 p-1 rounded-xl flex">
+                  {[
+                    { label: "Pemasukan", value: "INCOME", color: "bg-emerald-500" },
+                    { label: "Pengeluaran", value: "EXPENSE", color: "bg-rose-500" }
+                  ].map((type) => {
+                    const isActive = activeType === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        onClick={() => setActiveType(type.value)}
+                        className={clsx(
+                          "flex-1 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5",
+                          isActive
+                            ? "bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-sm font-bold"
+                            : "text-[var(--text-secondary)] hover:text-indigo-600 dark:hover:text-indigo-400"
+                        )}
+                      >
+                        <span className={clsx("w-2 h-2 rounded-full shrink-0", type.color)} />
+                        <span>{type.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bento-card p-4 rounded-xl border-l-4 border-l-emerald-500 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Pemasukan</p>
+                  <h4 className="text-xs sm:text-sm md:text-base font-bold text-emerald-600 dark:text-emerald-400 tabular-nums truncate" title={formatCurrency(filteredIncome)}>
+                    {formatCompactNumber(filteredIncome)}
+                  </h4>
+                </div>
+                <div className="bento-card p-4 rounded-xl border-l-4 border-l-red-500 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Pengeluaran</p>
+                  <h4 className="text-xs sm:text-sm md:text-base font-bold text-red-500 dark:text-red-400 tabular-nums truncate" title={formatCurrency(filteredExpense)}>
+                    {formatCompactNumber(filteredExpense)}
+                  </h4>
+                </div>
+                <div className="bento-card p-4 rounded-xl border-l-4 border-l-indigo-600 dark:border-l-indigo-400 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-tertiary)] mb-1">Selisih</p>
+                  <h4 className={clsx(
+                    "text-xs sm:text-sm md:text-base font-bold tabular-nums truncate",
+                    isNetPositive ? "text-indigo-600 dark:text-indigo-400" : "text-red-500 dark:text-red-400"
+                  )} title={formatCurrency(netValue)}>
+                    {isNetPositive ? "+" : ""}{formatCompactNumber(netValue)}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Donut Chart & Legend */}
+              <div className="bento-card p-6 rounded-2xl flex flex-col items-center">
+                <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] w-full mb-6">
+                  Distribusi {activeType === "INCOME" ? "Pemasukan" : "Pengeluaran"}
+                </h3>
+
+                {categorySummary.list.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center w-full">
+                    <p className="text-xs text-[var(--text-tertiary)]">
+                      Tidak ada {activeType === "INCOME" ? "pemasukan" : "pengeluaran"} di periode ini
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative w-48 h-48 mb-6 flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categorySummary.list}
+                            dataKey="amount"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={55}
+                            outerRadius={70}
+                            paddingAngle={2}
+                          >
+                            {categorySummary.list.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value) => [formatCurrency(value), activeType === "INCOME" ? "Pemasukan" : "Pengeluaran"]}
+                            contentStyle={{
+                              backgroundColor: "var(--card-bg)",
+                              borderColor: "var(--border-color)",
+                              color: "var(--text-primary)",
+                              borderRadius: "0.75rem",
+                              fontSize: "12px",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                        <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-wider">Total</p>
+                        <p className="text-sm sm:text-base font-bold text-[var(--text-primary)] mt-0.5 tabular-nums">
+                          {formatCompactNumber(categorySummary.total)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 w-full">
+                      {categorySummary.list.slice(0, 4).map((cat) => (
+                        <div key={cat.id} className="flex items-center space-x-2 min-w-0">
+                          <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: cat.color }}></div>
+                          <span className="text-[10px] text-[var(--text-secondary)] font-medium truncate" title={cat.name}>
+                            {cat.name} ({cat.percentage.toFixed(0)}%)
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Category Detail List */}
+              <div className="bento-card p-6 rounded-2xl flex flex-col space-y-5">
+                <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">Detail Kategori</h3>
+                
+                {categorySummary.list.length === 0 ? (
+                  <div className="text-center py-6 text-xs text-[var(--text-tertiary)]">
+                    Belum ada transaksi kategori
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {categorySummary.list.slice(0, 4).map((cat) => {
+                      const CatIcon = LucideIcons[cat.icon] || LucideIcons.Tag;
+                      return (
+                        <div key={cat.id} className="flex items-center gap-3">
+                          <div 
+                            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                            style={{ backgroundColor: `${cat.color}15` }}
+                          >
+                            <CatIcon className="w-5 h-5" style={{ color: cat.color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between mb-1 text-xs font-semibold">
+                              <span className="text-[var(--text-primary)] truncate pr-2">{cat.name}</span>
+                              <span className="text-[var(--text-tertiary)] tabular-nums shrink-0">{formatCurrency(cat.amount)}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-[var(--bg-tertiary)] dark:bg-slate-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full rounded-full transition-all duration-500" 
+                                style={{ 
+                                  width: `${cat.percentage}%`,
+                                  backgroundColor: cat.color
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <button 
+                  onClick={() => navigate("/categories")}
+                  className="w-full text-center text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 pt-2 transition-colors cursor-pointer"
+                >
+                  Lihat Semua Kategori
+                </button>
+              </div>
+
+            </div>
+
+            {/* Right Column */}
+            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-6">
+              
+              {/* Comparison Bar Chart */}
+              <div className="bento-card p-6 rounded-2xl">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)]">Perbandingan Arus Kas</h3>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-3 h-3 rounded-sm bg-[#3525cd]"></div>
+                      <span className="text-[10px] text-[var(--text-tertiary)] font-semibold uppercase">Masuk</span>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-3 h-3 rounded-sm bg-[#ffc329]"></div>
+                      <span className="text-[10px] text-[var(--text-tertiary)] font-semibold uppercase">Keluar</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="barMasuk" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#6366f1" />
+                          <stop offset="100%" stopColor="#3525cd" />
+                        </linearGradient>
+                        <linearGradient id="barKeluar" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ffdf9f" />
+                          <stop offset="100%" stopColor="#ffc329" />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="var(--text-tertiary)" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                      />
+                      <YAxis
+                        stroke="var(--text-tertiary)"
+                        fontSize={9}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => formatCompactNumber(v)}
+                      />
+                      <Tooltip content={<CustomChartTooltip />} cursor={{ fill: "var(--bg-tertiary)", opacity: 0.15 }} />
+                      <Bar
+                        dataKey="Pemasukan"
+                        name="Masuk"
+                        fill="url(#barMasuk)"
+                        radius={[4, 4, 0, 0]}
+                        barSize={activePeriod === "Bulan" ? 5 : 12}
+                      />
+                      <Bar
+                        dataKey="Pengeluaran"
+                        name="Keluar"
+                        fill="url(#barKeluar)"
+                        radius={[4, 4, 0, 0]}
+                        barSize={activePeriod === "Bulan" ? 5 : 12}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Accumulation Area Chart */}
+              <div className="bento-card p-6 rounded-2xl relative overflow-hidden">
+                <div className="z-10 relative mb-4">
+                  <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] mb-1">Tren Akumulasi</h3>
+                  <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                    {periodPercentageChange 
+                      ? `${periodPercentageChange.isPositive ? "+" : "-"}${periodPercentageChange.value}% dibanding ${
+                          activePeriod === "Minggu" ? "minggu" : activePeriod === "Bulan" ? "bulan" : activePeriod === "3 Bulan" ? "3 bulan" : "tahun"
+                        } lalu`
+                      : "+0% dibanding periode lalu"}
+                  </p>
+                </div>
+
+                <div className="h-40 w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0.2} />
+                          <stop offset="95%" stopColor={activeType === "EXPENSE" ? "#EF4444" : "#10B981"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
+                      <XAxis 
+                        dataKey="name" 
+                        stroke="var(--text-tertiary)" 
+                        fontSize={10} 
+                        tickLine={false} 
+                        axisLine={false} 
+                      />
+                      <YAxis
+                        stroke="var(--text-tertiary)"
+                        fontSize={9}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => formatCompactNumber(v)}
+                      />
+                      <Tooltip 
+                        content={<CustomTrendTooltip isYearly={activePeriod === "Tahun"} activeType={activeType} />} 
+                        cursor={{ stroke: "var(--border-color)", strokeWidth: 1 }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="Akumulasi"
+                        stroke={activeType === "EXPENSE" ? "#EF4444" : "#10B981"}
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorTrend)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Wallet Activity Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {walletSummaries.map((w) => {
+                  const WalletIcon = walletIconMap[w.type] || Banknote;
+                  
+                  const growthText = w.income > w.expense 
+                    ? `+${((w.income - w.expense) / (w.balance || 1) * 100).toFixed(1)}% periode ini` 
+                    : w.expense > 0 
+                    ? `-${(w.expense / (w.balance || 1) * 100).toFixed(1)}% periode ini` 
+                    : "0% periode ini";
+
+                  const isPositive = w.income >= w.expense;
+
+                  return (
+                    <div key={w.id} className="bento-card p-5 rounded-2xl flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-md transition-all duration-300">
+                      {/* Subtle decorative glow of the wallet's custom color in the background */}
+                      <div 
+                        className="absolute top-0 right-0 w-24 h-24 rounded-full opacity-[0.03] dark:opacity-[0.06] group-hover:opacity-[0.06] dark:group-hover:opacity-[0.1] blur-2xl transition-opacity pointer-events-none"
+                        style={{ backgroundColor: w.color }}
+                      />
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3 min-w-0">
+                            <div 
+                              className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm"
+                              style={{ backgroundColor: `${w.color}15` }}
+                            >
+                              <WalletIcon className="w-5 h-5" style={{ color: w.color }} />
+                            </div>
+                            <span className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">{w.name}</span>
+                          </div>
+                          <button 
+                            onClick={() => navigate("/wallets")}
+                            className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                          >
+                            <LucideIcons.MoreVertical className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <p className="text-[10px] text-[var(--text-tertiary)] mb-1">Saldo Tersedia</p>
+                        <h4 className="text-sm sm:text-base font-bold text-[var(--text-primary)] mb-1.5 tabular-nums">
+                          {formatCurrency(w.balance)}
+                        </h4>
+                      </div>
+                      
+                      <div className="space-y-2 mt-2">
+                        <div className="flex items-center justify-between text-[10px] text-[var(--text-secondary)] font-medium">
+                          <span>Rasio Keluar</span>
+                          <span className="font-bold text-[var(--text-primary)] tabular-nums">{w.ratio.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-[var(--bg-tertiary)] dark:bg-slate-700 overflow-hidden">
+                          <div
+                            className={clsx(
+                              "h-full rounded-full transition-all duration-500",
+                              w.ratio > 100
+                                ? "bg-rose-600"
+                                : w.ratio > 80
+                                ? "bg-rose-500"
+                                : w.ratio > 50
+                                ? "bg-amber-500"
+                                : "bg-indigo-600"
+                            )}
+                            style={{ width: `${Math.min(w.ratio, 100)}%` }}
+                          />
+                        </div>
+                        <div className={clsx(
+                          "flex items-center space-x-1 text-[10px] font-semibold",
+                          isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"
+                        )}>
+                          {isPositive ? (
+                            <LucideIcons.TrendingUp className="w-3 h-3" />
+                          ) : (
+                            <LucideIcons.TrendingDown className="w-3 h-3" />
+                          )}
+                          <span>{growthText}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 });
 

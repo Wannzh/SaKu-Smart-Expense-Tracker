@@ -4,23 +4,24 @@ import { useAuth } from "../../hooks/useAuth";
 import ThemeToggle from "../common/ThemeToggle";
 import {
   LayoutDashboard,
+  BarChart2,
+  Wallet,
   ArrowLeftRight,
+  Star,
+  RefreshCw,
   ScanLine,
   MessageSquare,
-  LogOut,
-  Wallet,
   CreditCard,
-  BarChart2,
   UserCircle,
-  Gift,
-  RefreshCw,
+  LogOut,
+  ReceiptText,
 } from "lucide-react";
 import clsx from "clsx";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/statistics", icon: BarChart2, label: "Statistik" },
-  { to: "/wallets", icon: CreditCard, label: "Wallet" },
+  { to: "/wallets", icon: Wallet, label: "Wallet" },
   { to: "/transactions", icon: ArrowLeftRight, label: "Transaksi" },
   { to: "/scan", icon: ScanLine, label: "Scan Struk" },
   { to: "/chat", icon: MessageSquare, label: "Chat AI" },
@@ -36,26 +37,27 @@ const Sidebar = memo(function Sidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-[var(--sidebar-bg)] border-r border-[var(--border-color)]">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-md shadow-indigo-200/40">
-          <Wallet className="h-5 w-5 text-white" />
-        </div>
+    <aside className="fixed left-0 top-0 h-screen w-[280px] bg-[var(--sidebar-bg)] border-r border-[var(--border-color)] shadow-sm flex flex-col py-4 z-50">
+      {/* Brand Header */}
+      <div className="px-6 py-4 flex items-center gap-3">
+        <img
+          src="/saku.svg"
+          className="w-10 h-10 object-contain dark:bg-white dark:rounded-lg dark:p-1"
+          alt="SaKu Logo"
+        />
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-indigo-600">
+          <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-200 leading-none">
             SaKu
           </h1>
-          <p className="text-[11px] text-[var(--text-tertiary)] -mt-0.5">Smart Expense Tracker</p>
+          <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-widest mt-1">
+            Smart Expense Tracker
+          </p>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-[var(--border-color)]" />
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 flex flex-col justify-between">
-        <ul className="flex flex-col gap-1">
+      {/* Navigation Tabs */}
+      <nav className="flex-1 px-4 mt-6 space-y-1 overflow-y-auto custom-scrollbar">
+        <ul className="space-y-1">
           {navItems.map(({ to, icon: Icon, label }) => (
             <li key={to}>
               <NavLink
@@ -63,84 +65,48 @@ const Sidebar = memo(function Sidebar() {
                 end={to === "/"}
                 className={({ isActive }) =>
                   clsx(
-                    "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 font-medium text-sm",
                     isActive
-                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/40"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-indigo-600"
+                      ? "text-indigo-600 dark:text-indigo-200 font-bold border-r-2 border-indigo-600 bg-[var(--bg-tertiary)]"
+                      : "text-[var(--text-secondary)] hover:text-indigo-600 hover:bg-[var(--bg-tertiary)]"
                   )
                 }
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                {label}
+                <span>{label}</span>
               </NavLink>
             </li>
           ))}
         </ul>
 
-        <div>
-          {/* Divider */}
-          <div className="my-2 h-px bg-[var(--border-color)] mx-1" />
-          <NavLink
-            to="/profile"
-            className={({ isActive }) =>
-              clsx(
-                "flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200/40"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-indigo-600"
-              )
-            }
-          >
-            <UserCircle className="h-5 w-5 shrink-0" />
-            Profil & Pengaturan
-          </NavLink>
+        {/* CTA - Theme Toggle placed here replacing the manual transaction button */}
+        <div className="pt-6 px-2">
+          <ThemeToggle />
         </div>
       </nav>
 
-      {/* Divider */}
-      <div className="mx-4 h-px bg-[var(--border-color)]" />
-
-      {/* Theme + User + Logout */}
-      <div className="p-4">
-        {/* Theme section */}
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-tertiary)] mb-2 px-2">
-          Tampilan
-        </p>
-        <ThemeToggle />
-
-        {/* Divider */}
-        <div className="my-3 h-px bg-[var(--border-color)]" />
-
-        {/* User info */}
-        <div className="flex items-center gap-3 mb-3 px-2">
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="h-9 w-9 rounded-full object-cover border border-[var(--border-color)]"
-            />
-          ) : (
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-600">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
-              {user?.name || "User"}
-            </p>
-            <p className="truncate text-xs text-[var(--text-tertiary)]">
-              {user?.email || ""}
-            </p>
-          </div>
-        </div>
-
-        {/* Logout button */}
+      {/* Footer Tabs */}
+      <div className="px-4 py-4 border-t border-[var(--border-color)]/30 space-y-1">
+        <NavLink
+          to="/profile"
+          className={({ isActive }) =>
+            clsx(
+              "flex items-center gap-3 px-4 py-3 rounded-xl transition-colors duration-200 font-medium text-sm",
+              isActive
+                ? "text-indigo-600 dark:text-indigo-200 font-bold border-r-2 border-indigo-600 bg-[var(--bg-tertiary)]"
+                : "text-[var(--text-secondary)] hover:text-indigo-600 hover:bg-[var(--bg-tertiary)]"
+            )
+          }
+        >
+          <UserCircle className="h-5 w-5 shrink-0" />
+          <span>Profile</span>
+        </NavLink>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-all duration-200 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/30 cursor-pointer"
+          className="flex w-full items-center gap-3 px-4 py-3 rounded-xl text-[var(--text-secondary)] hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors duration-200 font-medium text-sm cursor-pointer"
         >
           <LogOut className="h-5 w-5 shrink-0" />
-          Keluar
+          <span>Keluar</span>
         </button>
       </div>
     </aside>
