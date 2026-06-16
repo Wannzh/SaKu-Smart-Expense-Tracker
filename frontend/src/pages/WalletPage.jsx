@@ -449,7 +449,7 @@ const WalletPage = memo(function WalletPage() {
       {/* AI Smart Actions FAB */}
       <button 
         onClick={() => navigate("/chat")}
-        className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 w-14 h-14 lg:w-16 lg:h-16 bg-indigo-600 text-white hover:bg-indigo-700 rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 z-50 group cursor-pointer animate-pulse-glow"
+        className="fixed bottom-24 right-6 lg:bottom-10 lg:right-10 w-14 h-14 lg:w-16 lg:h-16 bg-indigo-600 text-white hover:bg-indigo-700 rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-200 z-50 group cursor-pointer animate-pulse-glow"
       >
         <LucideIcons.Sparkles className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
         <div className="absolute right-16 lg:right-20 bg-[var(--card-bg)] border border-[var(--border-color)] px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-primary)] shadow-lg opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">
