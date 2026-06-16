@@ -1,49 +1,51 @@
 # Stage 1: Build the backend application
 FROM node:20-alpine AS builder
 
-# Install build dependencies for compiling native node modules (like argon2)
+# Install build dependencies untuk compiling native modules (seperti argon2/bcrypt)
 RUN apk add --no-cache g++ make python3
 
-# Install pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# Install pnpm menggunakan Corepack
 RUN corepack enable
 
 WORKDIR /app
 
-# Copy root workspace and lockfile configuration
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-# Copy backend package.json
-COPY backend/package.json ./backend/
+# Karena di Render Root Directory di-set ke "backend", 
+# posisi Docker sudah berada di dalam folder backend.
+# Kita langsung menyalin package.json milik backend.
+COPY package.json ./
 
-# Install dependencies (only for backend and its dependencies)
-RUN pnpm install --frozen-lockfile --filter backend...
+# Install dependencies khusus untuk backend saja
+RUN pnpm install
 
-# Copy prisma folder and generate Prisma Client
-COPY backend/prisma ./backend/prisma/
-RUN pnpm --filter backend db:generate
+# Copy folder prisma dan generate Prisma Client
+COPY prisma ./prisma/
+RUN pnpm exec prisma generate
 
-# Copy the rest of the backend source files
-COPY backend ./backend/
+# Copy seluruh sisa file source code backend
+COPY . .
 
-# Stage 2: Create a minimal runner image
+# Stage 2: Create a minimal runner image (Production)
 FROM node:20-alpine AS runner
-
-# Install postgresql-client to use pg_isready for startup checks
-RUN apk add --no-cache postgresql-client
 
 WORKDIR /app
 
-# Copy built application from builder stage
-COPY --from=builder /app /app
+# Mengaktifkan corepack di runner agar perintah pnpm start bisa berjalan
+RUN corepack enable
 
-WORKDIR /app/backend
+# Menyalin hasil build dan dependencies yang sudah matang dari stage builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src ./src
 
-EXPOSE 5001
+# Set port ke 5000 (Sesuai dengan setelan port standard Express kamu)
+EXPOSE 5000
 
-# Set production environment variables
+# Set environment variables produksi
 ENV NODE_ENV=production
-ENV PORT=5001
+ENV PORT=5000
 
-# Wait for database connection, run migrations, and then start the server
-CMD ["sh", "-c", "until pg_isready -h postgres -p 5432; do echo 'Waiting for postgres...'; sleep 2; done && npx prisma migrate deploy && pnpm start"]
+# Karena kamu menggunakan Supabase (Database Cloud Online)[cite: 45], 
+# Kamu TIDAK PERLU lagi menggunakan perintah "pg_isready -h postgres".
+# Server bisa langsung melakukan migrasi prisma deploy dan langsung start server!
+CMD ["sh", "-c", "pnpm prisma migrate deploy && pnpm start"]

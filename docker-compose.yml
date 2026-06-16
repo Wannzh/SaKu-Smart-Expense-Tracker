@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Database Service (PostgreSQL)
+  # Database Service (PostgreSQL) - Hanya terpakai jika dideploy di VPS/GCP lokal, tidak terpakai di Render karena pakai Supabase
   postgres:
     image: postgres:15-alpine
     container_name: saku_postgres
@@ -23,18 +23,15 @@ services:
   # Backend Service (Node/Express API + Prisma)
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend      # KUNCI FLEKSIBEL: Docker Compose masuk ke folder backend dahulu
+      dockerfile: Dockerfile  # Mengeksekusi Dockerfile baru yang ada di dalam folder backend
     container_name: saku_backend
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
+    # depends_on diganti menjadi opsional jika kamu pakai Supabase di cloud
     environment:
-      PORT: 5001
+      PORT: 5000
       NODE_ENV: production
-      DATABASE_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-sakupassword}@postgres:5432/${DB_NAME:-sakudb}?schema=public
-      DIRECT_URL: postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-sakupassword}@postgres:5432/${DB_NAME:-sakudb}?schema=public
+      DATABASE_URL: ${DATABASE_URL} # Otomatis membaca dari file .env di luar
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       COOKIE_SECRET: ${COOKIE_SECRET}
@@ -44,15 +41,15 @@ services:
       CLOUDINARY_URL: ${CLOUDINARY_URL}
       CLIENT_URL: ${CLIENT_URL:-http://localhost}
     ports:
-      - "5001:5001"
+      - "5000:5000"
 
   # Frontend Service (Nginx serving React Vite build)
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend     # KUNCI FLEKSIBEL: Docker Compose masuk ke folder frontend dahulu
+      dockerfile: Dockerfile  # Mengeksekusi Dockerfile baru yang ada di dalam folder frontend
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:5001/api}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
         VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID}
     container_name: saku_frontend
     restart: unless-stopped

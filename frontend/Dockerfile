@@ -1,43 +1,40 @@
 # Stage 1: Build the React Vite application
 FROM node:20-alpine AS builder
 
-# Install pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+# Install pnpm menggunakan Corepack
 RUN corepack enable
 
 WORKDIR /app
 
-# Copy pnpm lockfile, workspace settings, and root package.json
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-# Copy frontend package.json
-COPY frontend/package.json ./frontend/
+# Karena di Render Root Directory di-set ke "frontend", posisi kita sudah di dalam folder frontend.
+# Kita langsung menyalin package.json milik frontend.
+COPY package.json ./
 
-# Install dependencies for the frontend workspace specifically
-RUN pnpm install --frozen-lockfile --filter frontend...
+# Install dependencies untuk frontend
+RUN pnpm install
 
-# Copy frontend source code
-COPY frontend ./frontend/
+# Menyalin seluruh source code frontend
+COPY . .
 
-# Define build arguments for client-side environment variables
+# Menerima build arguments untuk environment variables client-side
 ARG VITE_API_URL
 ARG VITE_GOOGLE_CLIENT_ID
 
-# Expose them as environment variables for the Vite build step
+# Mengekspos variabel tersebut agar tertanam di dalam build Vite
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 
-# Build the frontend production bundle
-RUN pnpm --filter frontend build
+# Build aplikasi React menjadi file statis (folder dist)
+RUN pnpm build
 
-# Stage 2: Serve built assets using Nginx
+# Stage 2: Serve built assets menggunakan Nginx
 FROM nginx:1.25-alpine
 
-# Copy built assets from builder stage
-COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+# Menyalin file statis hasil build dari stage builder ke folder HTML Nginx
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom Nginx configuration for routing
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Menyalin file nginx.conf (karena sudah di dalam folder frontend, path-nya langsung nginx.conf)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
