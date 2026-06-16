@@ -4,6 +4,7 @@ import { useBudget } from "../hooks/useBudget";
 import { useCategory } from "../hooks/useCategory";
 import { useTransaction } from "../hooks/useTransaction";
 import { formatCurrency, cleanDescription } from "../utils/format";
+import { useMoneyInput } from "../hooks/useMoneyInput";
 import * as LucideIcons from "lucide-react";
 import {
   ChevronLeft,
@@ -83,9 +84,16 @@ const BudgetPage = memo(function BudgetPage() {
   const [relatedTransactions, setRelatedTransactions] = useState([]);
   const [currentDate, setCurrentDate] = useState(() => dayjs());
 
+  const {
+    displayValue: amountDisplay,
+    numericValue: amount,
+    handleChange: handleAmountChange,
+    setValue: setAmountValue,
+    reset: resetAmount
+  } = useMoneyInput(0);
+
   const [formData, setFormData] = useState({
     categoryId: "",
-    amount: "",
     name: "",
   });
 
@@ -145,29 +153,29 @@ const BudgetPage = memo(function BudgetPage() {
   const handleOpenAddView = useCallback(() => {
     setFormData({
       categoryId: "",
-      amount: "",
       name: "",
     });
+    resetAmount();
     setView("add");
-  }, []);
+  }, [resetAmount]);
 
   const handleOpenEditView = useCallback((budget) => {
     setFormData({
       categoryId: budget.categoryId,
-      amount: budget.amount.toString(),
       name: `Anggaran ${budget.category.name} Bulanan`,
     });
+    setAmountValue(budget.amount || 0);
     setView("edit");
-  }, []);
+  }, [setAmountValue]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (!formData.categoryId || !formData.amount) return;
+    if (!formData.categoryId || !amount) return;
 
     const targetCategoryId = formData.categoryId;
     const success = await upsertBudget({
       categoryId: targetCategoryId,
-      amount: parseFloat(formData.amount),
+      amount: amount,
       month: currentDate.month() + 1,
       year: currentDate.year(),
     });
@@ -227,7 +235,7 @@ const BudgetPage = memo(function BudgetPage() {
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!formData.categoryId || !formData.amount}
+            disabled={!formData.categoryId || !amount}
             className="px-5 py-2 text-sm font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
           >
             Simpan Anggaran
@@ -243,18 +251,17 @@ const BudgetPage = memo(function BudgetPage() {
               <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider">
                 Batas Jumlah
               </label>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 bg-[var(--bg-tertiary)] px-4 py-3 rounded-2xl border border-[var(--border-color)]">
-                  <span className="text-lg font-black text-[var(--text-primary)]">Rp</span>
-                  <ChevronDown className="h-4 w-4 text-[var(--text-secondary)]" />
-                </div>
+              <div className="relative w-full">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-secondary)] pointer-events-none select-none">
+                  Rp
+                </span>
                 <input
-                  type="number"
-                  value={formData.amount}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, amount: e.target.value }))}
-                  className="flex-1 bg-transparent text-4xl font-black text-[var(--text-primary)] outline-none border-b border-transparent focus:border-indigo-500 transition-all placeholder:text-[var(--text-tertiary)] py-1"
+                  type="text"
+                  inputMode="numeric"
+                  value={amountDisplay}
+                  onChange={handleAmountChange}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all"
                   placeholder="0"
-                  min="1"
                   required
                 />
               </div>

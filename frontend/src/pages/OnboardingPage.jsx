@@ -22,6 +22,7 @@ import {
   Banknote,
 } from "lucide-react";
 import clsx from "clsx";
+import { useMoneyInput } from "../hooks/useMoneyInput";
 
 const TOTAL_STEPS = 6;
 
@@ -182,13 +183,14 @@ const StepWallet = memo(function StepWallet({ amount, onAmountChange }) {
 
         {/* Amount input */}
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400">Rp</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400 pointer-events-none select-none">Rp</span>
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={amount}
-            onChange={(e) => onAmountChange(e.target.value)}
+            onChange={onAmountChange}
             placeholder="0"
-            className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-3.5 text-lg font-bold text-gray-800 outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-gray-200 bg-white text-gray-800 font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all text-lg"
           />
         </div>
       </div>
@@ -344,7 +346,13 @@ const OnboardingPage = memo(function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [selectedCurrency, setSelectedCurrency] = useState("IDR");
   const [notifEnabled, setNotifEnabled] = useState(false);
-  const [walletAmount, setWalletAmount] = useState("");
+  
+  const {
+    displayValue: walletAmountDisplay,
+    numericValue: walletAmountVal,
+    handleChange: handleWalletAmountChange,
+  } = useMoneyInput(0);
+
   const [walletBalance, setWalletBalance] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -365,7 +373,7 @@ const OnboardingPage = memo(function OnboardingPage() {
     if (step === 3) {
       setIsProcessing(true);
       try {
-        const bal = parseFloat(walletAmount) || 0;
+        const bal = walletAmountVal;
         await createWallet({
           name: "Cash",
           type: "cash",
@@ -450,7 +458,7 @@ const OnboardingPage = memo(function OnboardingPage() {
             />
           )}
           {step === 2 && <StepNotification enabled={notifEnabled} onToggle={handleNotifToggle} />}
-          {step === 3 && <StepWallet amount={walletAmount} onAmountChange={setWalletAmount} />}
+          {step === 3 && <StepWallet amount={walletAmountDisplay} onAmountChange={handleWalletAmountChange} />}
           {step === 4 && (
             <StepTheme
               theme={theme}

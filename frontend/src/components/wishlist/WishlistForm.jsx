@@ -4,6 +4,7 @@ import { X, Upload, Image as ImageIcon } from "lucide-react";
 import FloatingLabelInput from "../common/FloatingLabelInput";
 import Button from "../common/Button";
 import clsx from "clsx";
+import { useMoneyInput } from "../../hooks/useMoneyInput";
 
 const WishlistForm = memo(function WishlistForm({
   isOpen,
@@ -14,11 +15,18 @@ const WishlistForm = memo(function WishlistForm({
 }) {
   const [formData, setFormData] = useState({
     name: "",
-    targetPrice: "",
     productLink: "",
     targetDate: "",
     status: "ACTIVE",
   });
+
+  const {
+    displayValue: targetPriceDisplay,
+    numericValue: targetPrice,
+    handleChange: handleTargetPriceChange,
+    setValue: setTargetPriceValue,
+    reset: resetTargetPrice,
+  } = useMoneyInput(0);
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -28,26 +36,26 @@ const WishlistForm = memo(function WishlistForm({
     if (wishlist) {
       setFormData({
         name: wishlist.name || "",
-        targetPrice: wishlist.targetPrice?.toString() || "",
         productLink: wishlist.productLink || "",
         targetDate: wishlist.targetDate ? new Date(wishlist.targetDate).toISOString().split("T")[0] : "",
         status: wishlist.status || "ACTIVE",
       });
+      setTargetPriceValue(wishlist.targetPrice || 0);
       setPreviewUrl(wishlist.imageUrl || "");
       setSelectedFile(null);
     } else {
       setFormData({
         name: "",
-        targetPrice: "",
         productLink: "",
         targetDate: "",
         status: "ACTIVE",
       });
+      resetTargetPrice();
       setPreviewUrl("");
       setSelectedFile(null);
     }
     setErrors({});
-  }, [wishlist, isOpen]);
+  }, [wishlist, isOpen, setTargetPriceValue, resetTargetPrice]);
 
   // Clean up ObjectURL preview on unmount/close
   useEffect(() => {
@@ -85,9 +93,9 @@ const WishlistForm = memo(function WishlistForm({
   const validate = () => {
     const newErrors = {};
     if (!formData.name.trim()) newErrors.name = "Nama barang wajib diisi";
-    if (!formData.targetPrice) {
+    if (!targetPrice) {
       newErrors.targetPrice = "Harga target wajib diisi";
-    } else if (Number(formData.targetPrice) <= 0) {
+    } else if (targetPrice <= 0) {
       newErrors.targetPrice = "Harga target harus lebih besar dari 0";
     }
 
@@ -102,7 +110,7 @@ const WishlistForm = memo(function WishlistForm({
     // Build FormData payload
     const data = new FormData();
     data.append("name", formData.name.trim());
-    data.append("targetPrice", Number(formData.targetPrice));
+    data.append("targetPrice", Number(targetPrice));
     data.append("productLink", formData.productLink.trim());
     
     if (formData.targetDate) {
@@ -195,13 +203,14 @@ const WishlistForm = memo(function WishlistForm({
             <FloatingLabelInput
               label="Harga"
               name="targetPrice"
-              type="number"
-              value={formData.targetPrice}
-              onChange={handleChange}
+              type="text"
+              inputMode="numeric"
+              value={targetPriceDisplay}
+              onChange={handleTargetPriceChange}
               error={errors.targetPrice}
               required
               prefix="Rp"
-              hint="cth. 500000"
+              hint="cth. 500.000"
             />
 
             {/* Target Tanggal */}

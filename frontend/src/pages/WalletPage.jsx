@@ -6,6 +6,7 @@ import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import Modal from "../components/common/Modal";
 import TransactionCard from "../components/transaction/TransactionCard";
+import { useMoneyInput } from "../hooks/useMoneyInput";
 import * as LucideIcons from "lucide-react";
 import {
   Plus,
@@ -42,14 +43,27 @@ const defaultColors = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#
 const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData }) {
   const isEdit = Boolean(initialData);
   const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    displayValue: initialBalanceDisplay,
+    numericValue: initialBalanceVal,
+    handleChange: handleInitialBalanceChange,
+    setValue: setInitialBalanceValue
+  } = useMoneyInput(0);
+
   const [form, setForm] = useState({
     name: initialData?.name || "",
     type: initialData?.type || "cash",
-    initialBalance: initialData?.initialBalance?.toString() || "0",
     icon: initialData?.icon || "cash",
     color: initialData?.color || "#4F46E5",
     bankName: initialData?.bankName || "",
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setInitialBalanceValue(initialData.initialBalance || 0);
+    }
+  }, [initialData, setInitialBalanceValue]);
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -61,7 +75,7 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
     try {
       await onSubmit({
         ...form,
-        initialBalance: parseFloat(form.initialBalance) || 0,
+        initialBalance: isEdit ? (initialData.initialBalance || 0) : initialBalanceVal,
       });
     } finally {
       setIsLoading(false);
@@ -96,7 +110,25 @@ const WalletForm = memo(function WalletForm({ onSubmit, onCancel, initialData })
 
       {/* Initial balance (only on create) */}
       {!isEdit && (
-        <Input label="Saldo Awal (Rp)" type="number" name="initialBalance" value={form.initialBalance} onChange={handleChange} placeholder="0" />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-[var(--text-primary)]">
+            Saldo Awal <span className="text-red-500 ml-0.5">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-secondary)] pointer-events-none select-none">
+              Rp
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={initialBalanceDisplay}
+              onChange={handleInitialBalanceChange}
+              placeholder="0"
+              required
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all text-sm"
+            />
+          </div>
+        </div>
       )}
 
       {/* Color picker */}

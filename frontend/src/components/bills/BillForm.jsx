@@ -10,6 +10,7 @@ import { useWallet } from "../../hooks/useWallet";
 import { useCategory } from "../../hooks/useCategory";
 import { useRecurring } from "../../hooks/useRecurring";
 import { formatCurrency } from "../../utils/format";
+import { useMoneyInput } from "../../hooks/useMoneyInput";
 
 // ─── Pure React Date Picker Modal (reused from RecurringForm) ─────
 const DatePickerModal = memo(function DatePickerModal({
@@ -142,9 +143,15 @@ const BillForm = memo(function BillForm({
   onClose,
   isLoading = false,
 }) {
+  const {
+    displayValue: amountDisplay,
+    numericValue: amount,
+    handleChange: handleAmountChange,
+    setValue: setAmountValue
+  } = useMoneyInput(0);
+
   const [formData, setFormData] = useState({
     title: "",
-    amount: "",
     dueDate: "",
     walletId: "",
     categoryId: "",
@@ -172,7 +179,6 @@ const BillForm = memo(function BillForm({
     if (initialData) {
       setFormData({
         title: initialData.title || "",
-        amount: initialData.amount !== undefined ? initialData.amount.toString() : "",
         dueDate: initialData.dueDate ? dayjs(initialData.dueDate).format("YYYY-MM-DD") : "",
         walletId: initialData.walletId || "",
         categoryId: initialData.categoryId || "",
@@ -181,8 +187,9 @@ const BillForm = memo(function BillForm({
         source: initialData.source || "MANUAL",
         autoRepeat: !!initialData.autoRepeat,
       });
+      setAmountValue(initialData.amount || 0);
     }
-  }, [initialData]);
+  }, [initialData, setAmountValue]);
 
   const activeRecurrings = useMemo(() => {
     return allRecurrings.filter((r) => r.status === "ACTIVE");
@@ -195,7 +202,7 @@ const BillForm = memo(function BillForm({
   const validate = () => {
     const newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Nama tagihan wajib diisi";
-    if (!formData.amount || Number(formData.amount) <= 0) {
+    if (!amount || amount <= 0) {
       newErrors.amount = "Nominal harus lebih besar dari 0";
     }
     if (!formData.dueDate) {
@@ -214,7 +221,7 @@ const BillForm = memo(function BillForm({
 
     onSubmit({
       ...formData,
-      amount: Number(formData.amount),
+      amount: amount,
     });
   };
 
@@ -272,12 +279,13 @@ const BillForm = memo(function BillForm({
             <FloatingLabelInput
               label="Jumlah"
               name="amount"
-              type="number"
+              type="text"
+              inputMode="numeric"
               prefix="Rp"
-              value={formData.amount}
-              onChange={(e) => handleInputChange("amount", e.target.value)}
+              value={amountDisplay}
+              onChange={handleAmountChange}
               error={errors.amount}
-              hint="cth. 350000"
+              hint="cth. 350.000"
               required
             />
 
@@ -420,11 +428,13 @@ const BillForm = memo(function BillForm({
                       recurringId: rid,
                       ...(recurring && {
                         title: recurring.title,
-                        amount: Number(recurring.amount),
                         walletId: recurring.walletId || "",
                         categoryId: recurring.categoryId || "",
                       }),
                     }));
+                    if (recurring) {
+                      setAmountValue(Number(recurring.amount));
+                    }
                     if (errors.recurringId) {
                       setErrors((prev) => ({ ...prev, recurringId: "" }));
                     }

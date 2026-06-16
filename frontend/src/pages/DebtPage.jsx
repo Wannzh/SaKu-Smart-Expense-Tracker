@@ -31,6 +31,7 @@ import WalletPicker from "../components/transaction/WalletPicker";
 import Modal from "../components/common/Modal";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
+import { useMoneyInput } from "../hooks/useMoneyInput";
 
 dayjs.locale("id");
 
@@ -68,7 +69,6 @@ const DebtPage = memo(function DebtPage() {
   const [form, setForm] = useState({
     type: "DEBT",
     personName: "",
-    amount: "",
     borrowDate: toISODate(new Date()),
     borrowTime: dayjs().format("HH:mm"),
     dueDate: toISODate(new Date()),
@@ -79,9 +79,24 @@ const DebtPage = memo(function DebtPage() {
   });
 
   const [payForm, setPayForm] = useState({
-    paidAmount: "",
     walletId: "",
   });
+
+  const {
+    displayValue: amountDisplay,
+    numericValue: amountVal,
+    handleChange: handleAmountChange,
+    setValue: setAmountValue,
+    reset: resetAmount,
+  } = useMoneyInput(0);
+
+  const {
+    displayValue: payAmountDisplay,
+    numericValue: payAmountVal,
+    handleChange: handlePayAmountChange,
+    setValue: setPayAmountValue,
+    reset: resetPayAmount,
+  } = useMoneyInput(0);
 
   // Fetch debts, wallets, and transactions on mount
   useEffect(() => {
@@ -170,7 +185,6 @@ const DebtPage = memo(function DebtPage() {
     setForm({
       type: activeTab,
       personName: "",
-      amount: "",
       borrowDate: now.format("YYYY-MM-DD"),
       borrowTime: now.format("HH:mm"),
       dueDate: now.format("YYYY-MM-DD"),
@@ -179,19 +193,24 @@ const DebtPage = memo(function DebtPage() {
       notes: "",
       currency: "Rp",
     });
+    resetAmount();
     setIsFormOpen(true);
-  }, [activeTab, wallets]);
+  }, [activeTab, wallets, resetAmount]);
 
   // Create or Update Debt Submit
   const handleFormSubmit = async (e) => {
     e.preventDefault();
+    if (!amountVal || amountVal <= 0) {
+      toast.error("Jumlah harus lebih dari 0");
+      return;
+    }
     const borrowDateStr = `${form.borrowDate} ${form.borrowTime || "00:00"}`;
     const dueDateTimeStr = `${form.dueDate} ${form.dueTime || "00:00"}`;
 
     const payload = {
       type: form.type,
       personName: form.personName,
-      amount: parseFloat(form.amount),
+      amount: amountVal,
       borrowDate: dayjs(borrowDateStr).toISOString(),
       dueDate: dayjs(dueDateTimeStr).toISOString(),
       walletId: form.walletId || null,
@@ -221,21 +240,25 @@ const DebtPage = memo(function DebtPage() {
   // Open Pay Modal
   const handleOpenPay = useCallback((debt) => {
     const remaining = Number(debt.amount) - Number(debt.paidAmount);
+    setPayAmountValue(remaining);
     setPayForm({
-      paidAmount: remaining.toString(),
       walletId: wallets[0]?.id || "",
     });
     setSelectedDebt(debt);
     setIsPayOpen(true);
-  }, [wallets]);
+  }, [wallets, setPayAmountValue]);
 
   // Submit Repayment
   const handlePaySubmit = async (e) => {
     e.preventDefault();
     if (!selectedDebt) return;
+    if (!payAmountVal || payAmountVal <= 0) {
+      toast.error("Nominal pembayaran harus lebih dari 0");
+      return;
+    }
 
     const result = await payDebt(selectedDebt.id, {
-      paidAmount: parseFloat(payForm.paidAmount),
+      paidAmount: payAmountVal,
       walletId: payForm.walletId || null,
     });
 
@@ -637,59 +660,18 @@ const DebtPage = memo(function DebtPage() {
             <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
               Jumlah
             </label>
-            <div className="flex items-center gap-3">
-              {/* Currency Selector */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen)}
-                  className="flex items-center gap-1.5 px-4 py-3 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl text-sm font-extrabold text-[var(--text-primary)] hover:border-indigo-500 transition-all cursor-pointer select-none"
-                >
-                  <span>{form.currency || "Rp"}</span>
-                  <ChevronRight className="h-4 w-4 text-[var(--text-tertiary)] rotate-90" />
-                </button>
-
-                {isCurrencyDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40"
-                      onClick={() => setIsCurrencyDropdownOpen(false)}
-                    />
-                    <div className="absolute left-0 mt-1.5 w-24 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-50 overflow-hidden py-1">
-                      {["Rp", "$", "€", "£", "¥", "SGD"].map((curr) => (
-                        <button
-                          key={curr}
-                          type="button"
-                          onClick={() => {
-                            if (curr !== "Rp") {
-                              toast.error("Fitur mata uang selain Rp masih dalam tahap Pengembangan");
-                              return;
-                            }
-                            setForm((prev) => ({ ...prev, currency: curr }));
-                            setIsCurrencyDropdownOpen(false);
-                          }}
-                          className={clsx(
-                            "w-full text-left px-4 py-2 text-xs font-bold hover:bg-[var(--bg-tertiary)] transition-colors cursor-pointer",
-                            form.currency === curr ? "text-indigo-600 dark:text-indigo-400 bg-indigo-500/5" : "text-[var(--text-primary)]"
-                          )}
-                        >
-                          {curr}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Amount Input */}
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-secondary)] pointer-events-none select-none">
+                Rp
+              </span>
               <input
-                type="number"
-                name="amount"
-                required
-                value={form.amount}
-                onChange={handleInputChange}
+                type="text"
+                inputMode="numeric"
+                value={amountDisplay}
+                onChange={handleAmountChange}
                 placeholder="0"
-                className="flex-1 rounded-xl border border-[var(--border-color)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none bg-[var(--bg-secondary)] focus:border-indigo-500 transition-all placeholder-[var(--text-tertiary)] font-bold"
+                required
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all"
               />
             </div>
           </div>
@@ -1044,15 +1026,25 @@ const DebtPage = memo(function DebtPage() {
             </div>
 
             {/* Nominal Bayar */}
-            <Input
-              label="Nominal Pembayaran (Rp)"
-              type="number"
-              name="paidAmount"
-              required
-              value={payForm.paidAmount}
-              onChange={handlePayInputChange}
-              placeholder="Masukkan nominal pelunasan..."
-            />
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[var(--text-secondary)] uppercase tracking-wider select-none">
+                Nominal Pembayaran
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--text-secondary)] pointer-events-none select-none">
+                  Rp
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  required
+                  value={payAmountDisplay}
+                  onChange={handlePayAmountChange}
+                  placeholder="Masukkan nominal pelunasan..."
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-bold tabular-nums text-right focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-600/10 transition-all"
+                />
+              </div>
+            </div>
 
             {/* Quick-select Percentages */}
             {(() => {
@@ -1060,7 +1052,7 @@ const DebtPage = memo(function DebtPage() {
               const val25 = Math.round(remaining * 0.25);
               const val50 = Math.round(remaining * 0.5);
               const val100 = remaining;
-              const currentVal = Number(payForm.paidAmount);
+              const currentVal = payAmountVal;
 
               return (
                 <div className="flex gap-2.5 mt-1.5 mb-2 select-none">
@@ -1074,7 +1066,7 @@ const DebtPage = memo(function DebtPage() {
                       <button
                         key={opt.label}
                         type="button"
-                        onClick={() => setPayForm((prev) => ({ ...prev, paidAmount: opt.value.toString() }))}
+                        onClick={() => setPayAmountValue(opt.value)}
                         className={clsx(
                           "flex-1 py-2 text-xs font-bold rounded-xl border transition-all cursor-pointer text-center active:scale-95",
                           isActive
