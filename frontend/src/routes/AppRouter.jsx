@@ -27,6 +27,8 @@ const WishlistPage = lazy(() => import("../pages/WishlistPage"));
 const RecurringPage = lazy(() => import("../pages/RecurringPage"));
 const CardsPage = lazy(() => import("../pages/CardsPage"));
 const BillsPage = lazy(() => import("../pages/BillsPage"));
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
+
 
 
 /**
@@ -241,7 +243,7 @@ export default function AppRouter() {
 
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
