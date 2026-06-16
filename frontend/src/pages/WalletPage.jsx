@@ -7,6 +7,7 @@ import Input from "../components/common/Input";
 import Modal from "../components/common/Modal";
 import TransactionCard from "../components/transaction/TransactionCard";
 import { useMoneyInput } from "../hooks/useMoneyInput";
+import { useTheme } from "../hooks/useTheme";
 import * as LucideIcons from "lucide-react";
 import {
   Plus,
@@ -166,7 +167,7 @@ const WalletPage = memo(function WalletPage() {
   const [editTarget, setEditTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showBalance, setShowBalance] = useState(true);
+  const { showBalance, toggleShowBalance: handleToggleBalance } = useTheme();
 
   useEffect(() => { getWallets(); }, [getWallets]);
 
@@ -234,7 +235,7 @@ const WalletPage = memo(function WalletPage() {
               <div className="flex justify-between items-start z-10">
                 <span className="text-xs font-bold uppercase tracking-widest text-indigo-200">Total Saldo Bersih</span>
                 <button 
-                  onClick={() => setShowBalance(!showBalance)}
+                  onClick={handleToggleBalance}
                   className="text-white/80 hover:text-white transition-colors cursor-pointer"
                 >
                   {showBalance ? <LucideIcons.Eye className="w-5 h-5" /> : <LucideIcons.EyeOff className="w-5 h-5" />}

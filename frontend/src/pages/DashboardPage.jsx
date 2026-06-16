@@ -259,8 +259,7 @@ const DashboardPage = memo(function DashboardPage() {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [showBalance, setShowBalance] = useState(true);
-  const { resolvedTheme, cardStyle } = useTheme();
+  const { resolvedTheme, cardStyle, showBalance, toggleShowBalance: handleToggleBalance } = useTheme();
 
   const activeGradient = useMemo(() => {
     const list = resolvedTheme === "dark" ? DARK_CARD_GRADIENTS : LIGHT_CARD_GRADIENTS;
@@ -420,7 +419,7 @@ const DashboardPage = memo(function DashboardPage() {
               <LucideIcons.ChevronDown className="h-3 w-3 absolute right-2.5 pointer-events-none text-white" />
             </div>
             <button 
-              onClick={() => setShowBalance(!showBalance)}
+              onClick={handleToggleBalance}
               className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm active:scale-95 transition-transform"
             >
               {showBalance ? (
@@ -653,10 +652,24 @@ const DashboardPage = memo(function DashboardPage() {
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm text-indigo-100/80 uppercase tracking-widest font-semibold">Total Saldo</p>
-                  <h3 className="text-3xl lg:text-4xl font-extrabold mt-1 tabular-nums break-words">
-                    {formatCurrency(totalWalletBalance)}
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-indigo-100/80 uppercase tracking-widest font-semibold">Total Saldo</p>
+                      <h3 className="text-3xl lg:text-4xl font-extrabold mt-1 tabular-nums break-words">
+                        {showBalance ? formatCurrency(totalWalletBalance) : "••••••••"}
+                      </h3>
+                    </div>
+                    <button 
+                      onClick={handleToggleBalance}
+                      className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm active:scale-95 transition-transform"
+                    >
+                      {showBalance ? (
+                        <LucideIcons.Eye className="h-5 w-5 text-white" />
+                      ) : (
+                        <LucideIcons.EyeOff className="h-5 w-5 text-white" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -668,7 +681,9 @@ const DashboardPage = memo(function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-white/70">Pemasukan</p>
-                    <p className="text-base font-bold text-white tabular-nums truncate">{formatCurrency(filteredIncome)}</p>
+                    <p className="text-base font-bold text-white tabular-nums truncate">
+                      {showBalance ? formatCurrency(filteredIncome) : "••••••"}
+                    </p>
                   </div>
                 </div>
                 {/* Pengeluaran */}
@@ -678,7 +693,9 @@ const DashboardPage = memo(function DashboardPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium text-white/70">Pengeluaran</p>
-                    <p className="text-base font-bold text-white tabular-nums truncate">{formatCurrency(filteredExpense)}</p>
+                    <p className="text-base font-bold text-white tabular-nums truncate">
+                      {showBalance ? formatCurrency(filteredExpense) : "••••••"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -781,7 +798,7 @@ const DashboardPage = memo(function DashboardPage() {
                             {walletTypeLabels[w.type] || w.type} • IDR
                           </p>
                           <p className="font-bold text-lg text-indigo-600 dark:text-indigo-400 mt-1 tabular-nums">
-                            {formatCurrency(Number(w.balance || 0))}
+                            {showBalance ? formatCurrency(Number(w.balance || 0)) : "••••••••"}
                           </p>
                         </div>
                       </div>
