@@ -49,38 +49,75 @@ const StepWelcome = memo(function StepWelcome({ user }) {
 });
 
 /* ─── Step 2: Currency ───────────────────────────────────── */
-const StepCurrency = memo(function StepCurrency() {
+const StepCurrency = memo(function StepCurrency({ selectedCurrency, setSelectedCurrency }) {
+  const currencies = [
+    { code: "IDR", name: "Rupiah", symbol: "Rp", available: true },
+    { code: "USD", name: "Dollar AS", symbol: "$", available: false },
+    { code: "SGD", name: "Dollar Singapura", symbol: "S$", available: false },
+  ];
+
   return (
     <div className="flex flex-col items-center">
       <h2 className="text-xl font-bold text-gray-800 mb-2 text-center">Pilih Mata Uang</h2>
       <p className="text-sm text-gray-400 mb-6 text-center">Default untuk semua transaksi</p>
 
-      {/* IDR Card — selected */}
-      <div className="w-full rounded-2xl border-2 border-indigo-600 bg-white p-5 flex items-center gap-4 shadow-sm mb-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-900 text-white font-bold text-lg shrink-0">
-          Rp
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-bold text-gray-800">Rupiah Indonesia</p>
-          <p className="text-xs text-gray-400">IDR — Rp</p>
-        </div>
-        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600">
-          <CheckCircle2 className="h-4 w-4 text-white" />
-        </div>
+      <div className="w-full flex flex-col gap-3">
+        {currencies.map((currency) => {
+          const isAvailable = currency.available;
+          const isSelected = selectedCurrency === currency.code;
+
+          return (
+            <button
+              key={currency.code}
+              type="button"
+              disabled={!isAvailable}
+              onClick={() => {
+                if (isAvailable) setSelectedCurrency(currency.code);
+              }}
+              className={clsx(
+                "relative flex items-center gap-3 p-4 rounded-2xl border transition-all w-full",
+                // Tersedia + terpilih
+                isAvailable && isSelected &&
+                  "bg-indigo-600 border-indigo-600 text-white",
+                // Tersedia + belum terpilih
+                isAvailable && !isSelected &&
+                  "bg-[var(--card-bg)] border-[var(--border-color)] hover:border-indigo-600/50 cursor-pointer text-[var(--text-primary)]",
+                // Tidak tersedia
+                !isAvailable &&
+                  "bg-[var(--bg-secondary)] border-[var(--border-color)]/40 opacity-50 cursor-not-allowed text-[var(--text-tertiary)]"
+              )}
+            >
+              {/* Symbol / Flag */}
+              <span className="text-xl font-bold tabular-nums w-12 text-center shrink-0">
+                {currency.symbol}
+              </span>
+
+              {/* Info */}
+              <div className="flex-1 text-left">
+                <p className="font-bold text-sm">{currency.code}</p>
+                <p className="text-xs opacity-75">{currency.name}</p>
+              </div>
+
+              {/* Badge "Segera Hadir" untuk yang tidak tersedia */}
+              {!isAvailable && (
+                <span className="absolute top-2 right-2 px-2 py-0.5 
+                  bg-[var(--bg-tertiary)] border border-[var(--border-color)]/60
+                  text-[var(--text-tertiary)] text-[10px] font-bold 
+                  rounded-full uppercase tracking-wide">
+                  Segera Hadir
+                </span>
+              )}
+
+              {/* Checkmark untuk yang terpilih */}
+              {isAvailable && isSelected && (
+                <Check className="h-4 w-4 text-white shrink-0" />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* USD Card — disabled */}
-      <div className="w-full rounded-2xl border border-gray-200 bg-gray-50 p-5 flex items-center gap-4 opacity-50 mb-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-300 text-gray-600 font-bold text-lg shrink-0">
-          $
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500">US Dollar</p>
-          <p className="text-xs text-gray-400">USD — $</p>
-        </div>
-      </div>
-
-      <p className="text-xs text-gray-400 mt-4 text-center italic">
+      <p className="text-xs text-gray-400 mt-6 text-center italic">
         Bisa diubah kapan saja di Pengaturan
       </p>
     </div>
@@ -305,6 +342,7 @@ const OnboardingPage = memo(function OnboardingPage() {
   const { theme, resolvedTheme, cardStyle, setTheme, setCardStyle } = useTheme();
 
   const [step, setStep] = useState(0);
+  const [selectedCurrency, setSelectedCurrency] = useState("IDR");
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [walletAmount, setWalletAmount] = useState("");
   const [walletBalance, setWalletBalance] = useState(0);
@@ -405,7 +443,12 @@ const OnboardingPage = memo(function OnboardingPage() {
       <div className="flex-1 flex items-center justify-center px-8 overflow-y-auto">
         <div className="w-full max-w-sm animate-fade-slide-up" key={step}>
           {step === 0 && <StepWelcome user={user} />}
-          {step === 1 && <StepCurrency />}
+          {step === 1 && (
+            <StepCurrency
+              selectedCurrency={selectedCurrency}
+              setSelectedCurrency={setSelectedCurrency}
+            />
+          )}
           {step === 2 && <StepNotification enabled={notifEnabled} onToggle={handleNotifToggle} />}
           {step === 3 && <StepWallet amount={walletAmount} onAmountChange={setWalletAmount} />}
           {step === 4 && (
