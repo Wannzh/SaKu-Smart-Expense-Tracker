@@ -11,6 +11,7 @@ import { formatCurrency, cleanDescription } from "../utils/format";
 import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import { useBudget } from "../hooks/useBudget";
 import { useBill } from "../hooks/useBill";
+import UserAvatar from "../components/common/UserAvatar";
 import * as LucideIcons from "lucide-react";
 import {
   ArrowDownLeft,
@@ -386,15 +387,7 @@ const DashboardPage = memo(function DashboardPage() {
             </div>
           </div>
           <div className="relative">
-            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-indigo-200 dark:border-indigo-900 shadow-sm">
-              {user?.avatar ? (
-                <img alt="User Profile" className="w-full h-full object-cover" src={user.avatar} />
-              ) : (
-                <div className="w-full h-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-base select-none">
-                  {firstName.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <UserAvatar user={user} size="md" className="!w-12 !h-12 !text-base border-2 border-indigo-200 dark:border-indigo-900 shadow-sm" />
             <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[var(--card-bg)] rounded-full"></span>
           </div>
         </header>
@@ -621,17 +614,7 @@ const DashboardPage = memo(function DashboardPage() {
             <button className="w-12 h-12 rounded-xl bg-[var(--card-bg)] border border-[var(--border-color)] flex items-center justify-center hover:bg-[var(--bg-tertiary)] transition-all cursor-pointer">
               <Bell className="w-5 h-5 text-[var(--text-secondary)]" />
             </button>
-            {user?.avatar ? (
-              <img
-                alt={`${firstName}'s Avatar`}
-                className="w-12 h-12 rounded-xl border-2 border-[var(--card-bg)] shadow-sm object-cover"
-                src={user.avatar}
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-2 border-[var(--card-bg)] flex items-center justify-center font-bold text-lg shadow-sm select-none">
-                {firstName.charAt(0).toUpperCase()}
-              </div>
-            )}
+            <UserAvatar user={user} size="md" className="!w-12 !h-12 !rounded-xl border-2 border-[var(--card-bg)] shadow-sm font-bold text-lg" />
           </div>
         </header>
 

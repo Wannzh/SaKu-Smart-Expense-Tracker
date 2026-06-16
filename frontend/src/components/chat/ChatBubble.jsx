@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react";
 import { Wallet, User, Bot, TrendingDown, CheckCheck } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import UserAvatar from "../common/UserAvatar";
 import clsx from "clsx";
 import dayjs from "dayjs";
 
@@ -135,15 +136,11 @@ const ChatBubble = memo(function ChatBubble({ message }) {
       {/* Avatar */}
       <div className="flex-shrink-0">
         {isUser ? (
-          user?.avatar ? (
-            <div className="w-8 h-8 rounded-lg overflow-hidden border border-[var(--border-color)] shadow-sm">
-              <img alt="User" className="w-full h-full object-cover" src={user.avatar} />
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white font-extrabold text-sm flex items-center justify-center shadow-md">
-              {initialName}
-            </div>
-          )
+          <UserAvatar
+            user={user}
+            size="sm"
+            className="!rounded-lg border border-[var(--border-color)] shadow-sm"
+          />
         ) : (
           <div className="w-8 h-8 rounded-lg bg-[#ffc329] text-[#6f5100] dark:bg-amber-500/20 dark:text-amber-300 flex items-center justify-center shadow-sm">
             <Bot className="h-4.5 w-4.5" />

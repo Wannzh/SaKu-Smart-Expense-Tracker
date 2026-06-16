@@ -9,6 +9,7 @@ import { LIGHT_CARD_GRADIENTS, DARK_CARD_GRADIENTS } from "../utils/constants";
 import * as LucideIcons from "lucide-react";
 import clsx from "clsx";
 import toast from "react-hot-toast";
+import UserAvatar from "../components/common/UserAvatar";
 
 const ProfilePage = memo(function ProfilePage() {
   const navigate = useNavigate();
@@ -170,17 +171,11 @@ const ProfilePage = memo(function ProfilePage() {
             <div className="flex flex-col items-center text-center">
               {/* Profile Image & Uploader */}
               <div className="relative group mb-6 select-none">
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt={user.name}
-                    className="w-24 h-24 rounded-full object-cover border-4 border-[var(--card-bg)] shadow-lg"
-                  />
-                ) : (
-                  <div className="w-24 h-24 bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 rounded-full flex items-center justify-center font-bold text-3xl border-4 border-[var(--card-bg)] shadow-lg">
-                    {initialName}
-                  </div>
-                )}
+                <UserAvatar
+                  user={user}
+                  size="xl"
+                  className="!w-24 !h-24 !text-3xl border-4 border-[var(--card-bg)] shadow-lg"
+                />
                 <input
                   type="file"
                   ref={avatarInputRef}
