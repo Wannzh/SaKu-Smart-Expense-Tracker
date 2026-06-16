@@ -402,7 +402,7 @@ const OnboardingPage = memo(function OnboardingPage() {
     }
 
     setStep((s) => s + 1);
-  }, [step, walletAmount, createWallet, navigate]);
+  }, [step, walletAmountVal, createWallet, navigate]);
 
   const handleBack = useCallback(() => {
     setStep((s) => Math.max(0, s - 1));
